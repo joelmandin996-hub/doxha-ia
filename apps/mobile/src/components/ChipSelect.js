@@ -1,12 +1,19 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { colors, radius } from '../theme/colors';
+import * as Haptics from 'expo-haptics';
+import { colors, continuousCorner, radius } from '../theme/colors';
 
-export default function ChipSelect({ label, options, value, onChange, colorFor, labelFor }) {
+// `inset` renders the row flush inside a GroupedSection card (no outer
+// label/margin — the section's own title/footer take that role).
+export default function ChipSelect({ label, options, value, onChange, colorFor, labelFor, inset }) {
   return (
-    <View style={styles.field}>
+    <View style={inset ? null : styles.field}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={inset ? styles.insetContent : styles.standaloneContent}
+      >
         <View style={styles.row}>
           {options.map((option) => {
             const selected = option === value;
@@ -14,14 +21,14 @@ export default function ChipSelect({ label, options, value, onChange, colorFor, 
             return (
               <TouchableOpacity
                 key={option}
-                style={[
-                  styles.chip,
-                  { borderColor: selected ? color : colors.border },
-                  selected && { backgroundColor: `${color}1a` },
-                ]}
-                onPress={() => onChange(option)}
+                style={[styles.chip, selected ? { backgroundColor: color } : styles.chipIdle]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  onChange(option);
+                }}
+                activeOpacity={0.7}
               >
-                <Text style={[styles.chipText, selected && { color, fontWeight: '700' }]}>
+                <Text style={[styles.chipText, selected ? styles.chipTextSelected : styles.chipTextIdle]}>
                   {labelFor?.(option) || option}
                 </Text>
               </TouchableOpacity>
@@ -40,21 +47,39 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.foreground,
+    color: colors.label,
     marginBottom: 8,
+    marginLeft: 16,
+  },
+  insetContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  standaloneContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
   },
   row: {
     flexDirection: 'row',
     gap: 8,
   },
   chip: {
-    borderWidth: 1,
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
+    ...continuousCorner,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
+  chipIdle: {
+    backgroundColor: colors.fill,
+  },
   chipText: {
     fontSize: 13,
-    color: colors.mutedForeground,
+    fontWeight: '600',
+  },
+  chipTextSelected: {
+    color: '#ffffff',
+  },
+  chipTextIdle: {
+    color: colors.secondaryLabel,
   },
 });

@@ -1,15 +1,18 @@
-import React, { useMemo, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 import Screen from '../components/Screen';
 import SearchInput from '../components/SearchInput';
+import ChipSelect from '../components/ChipSelect';
 import Badge from '../components/Badge';
+import HeaderButton from '../components/HeaderButton';
 import EmptyState from '../components/EmptyState';
-import { colors, radius } from '../theme/colors';
+import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { SUIVI_STATUSES, SUIVI_STATUS_COLORS } from '../lib/constants';
 import { formatDate } from '../lib/format';
 import { useCollection } from '../lib/useCollection';
+
+const FILTER_OPTIONS = ['Tous', ...SUIVI_STATUSES];
 
 export default function SuivisListScreen({ navigation }) {
   const [search, setSearch] = useState('');
@@ -18,6 +21,12 @@ export default function SuivisListScreen({ navigation }) {
     sort: '-created',
     expand: 'membre_id',
   });
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => <HeaderButton icon="add-circle" onPress={() => navigation.navigate('SuiviForm')} />,
+    });
+  }, [navigation]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -37,37 +46,13 @@ export default function SuivisListScreen({ navigation }) {
   }, [items, search, statusFilter]);
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Text style={styles.title}>Suivis</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('SuiviForm')}>
-          <Ionicons name="add" size={22} color={colors.primaryForeground} />
-        </TouchableOpacity>
-      </View>
+    <Screen edges={['bottom', 'left', 'right']}>
       <SearchInput value={search} onChangeText={setSearch} placeholder="Rechercher un suivi..." />
-      <FlatList
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        data={['Tous', ...SUIVI_STATUSES]}
-        keyExtractor={(item) => item}
-        style={styles.filterRow}
-        contentContainerStyle={styles.filterRowContent}
-        renderItem={({ item }) => {
-          const selected = item === statusFilter;
-          const color = SUIVI_STATUS_COLORS[item] || colors.primary;
-          return (
-            <TouchableOpacity
-              style={[
-                styles.filterChip,
-                { borderColor: selected ? color : colors.border },
-                selected && { backgroundColor: `${color}1a` },
-              ]}
-              onPress={() => setStatusFilter(item)}
-            >
-              <Text style={[styles.filterChipText, selected && { color, fontWeight: '700' }]}>{item}</Text>
-            </TouchableOpacity>
-          );
-        }}
+      <ChipSelect
+        options={FILTER_OPTIONS}
+        value={statusFilter}
+        onChange={setStatusFilter}
+        colorFor={(option) => (option === 'Tous' ? colors.primary : SUIVI_STATUS_COLORS[option])}
       />
       <FlatList
         data={filtered}
@@ -82,6 +67,7 @@ export default function SuivisListScreen({ navigation }) {
           return (
             <TouchableOpacity
               style={styles.card}
+              activeOpacity={0.7}
               onPress={() => navigation.navigate('SuiviDetail', { id: item.id })}
             >
               <View style={styles.cardHeader}>
@@ -102,57 +88,18 @@ export default function SuivisListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.foreground,
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  filterRow: {
-    flexGrow: 0,
-    marginBottom: 12,
-  },
-  filterRowContent: {
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  filterChip: {
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-  },
-  filterChipText: {
-    fontSize: 13,
-    color: colors.mutedForeground,
-  },
   list: {
     paddingHorizontal: 16,
+    paddingTop: 4,
     paddingBottom: 24,
   },
   card: {
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
+    ...continuousCorner,
     padding: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 8,
+    marginBottom: 10,
+    ...shadow.card,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -163,12 +110,12 @@ const styles = StyleSheet.create({
   },
   cardName: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.foreground,
+    color: colors.label,
   },
   cardMeta: {
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: colors.secondaryLabel,
   },
 });

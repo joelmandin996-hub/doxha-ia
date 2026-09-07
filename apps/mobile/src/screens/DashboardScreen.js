@@ -6,7 +6,7 @@ import Screen from '../components/Screen';
 import StatCard from '../components/StatCard';
 import Badge from '../components/Badge';
 import EmptyState from '../components/EmptyState';
-import { colors, radius } from '../theme/colors';
+import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { formatDate } from '../lib/format';
 import { SUIVI_STATUS_COLORS } from '../lib/constants';
 import { useAuth } from '../contexts/AuthContext';
@@ -108,19 +108,21 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   greeting: {
-    fontSize: 14,
-    color: colors.mutedForeground,
+    fontSize: 15,
+    color: colors.secondaryLabel,
+    fontWeight: '500',
   },
   title: {
-    fontSize: 26,
+    fontSize: 32,
     fontWeight: '800',
-    color: colors.foreground,
-    marginBottom: 16,
+    color: colors.label,
+    letterSpacing: 0.2,
+    marginBottom: 20,
   },
   statsRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -129,22 +131,22 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 20,
     fontWeight: '700',
-    color: colors.foreground,
+    color: colors.label,
   },
   sectionLink: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '600',
     color: colors.primary,
   },
   suiviCard: {
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
+    ...continuousCorner,
     padding: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: 10,
+    ...shadow.card,
   },
   suiviHeader: {
     flexDirection: 'row',
@@ -155,12 +157,12 @@ const styles = StyleSheet.create({
   },
   suiviName: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.foreground,
+    color: colors.label,
   },
   suiviMeta: {
     fontSize: 12,
-    color: colors.mutedForeground,
+    color: colors.secondaryLabel,
   },
 });

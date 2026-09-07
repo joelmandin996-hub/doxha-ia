@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 import Screen from '../components/Screen';
 import Badge from '../components/Badge';
+import HeaderButton from '../components/HeaderButton';
 import EmptyState from '../components/EmptyState';
-import { colors, radius } from '../theme/colors';
+import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS } from '../lib/constants';
 import { formatDate } from '../lib/format';
 import { useCollection } from '../lib/useCollection';
@@ -15,6 +15,12 @@ export default function EventsListScreen({ navigation }) {
     sort: '-date_debut',
   });
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => <HeaderButton icon="add-circle" onPress={() => navigation.navigate('EventForm')} />,
+    });
+  }, [navigation]);
+
   useFocusEffect(
     React.useCallback(() => {
       reload();
@@ -23,13 +29,7 @@ export default function EventsListScreen({ navigation }) {
   );
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Text style={styles.title}>Événements</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('EventForm')}>
-          <Ionicons name="add" size={22} color={colors.primaryForeground} />
-        </TouchableOpacity>
-      </View>
+    <Screen edges={['bottom', 'left', 'right']}>
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
@@ -43,9 +43,10 @@ export default function EventsListScreen({ navigation }) {
           return (
             <TouchableOpacity
               style={styles.card}
+              activeOpacity={0.7}
               onPress={() => navigation.navigate('EventDetail', { id: item.id })}
             >
-              <View style={[styles.dateBox, { backgroundColor: `${color}1a` }]}>
+              <View style={[styles.dateBox, { backgroundColor: `${color}1f` }]}>
                 <Text style={[styles.dateDay, { color }]}>{formatDate(item.date_debut, 'd')}</Text>
                 <Text style={[styles.dateMonth, { color }]}>{formatDate(item.date_debut, 'MMM')}</Text>
               </View>
@@ -69,51 +70,32 @@ export default function EventsListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.foreground,
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   list: {
     paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 24,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
+    ...continuousCorner,
     padding: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 8,
+    marginBottom: 10,
     gap: 12,
+    ...shadow.card,
   },
   dateBox: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.sm,
+    width: 50,
+    height: 50,
+    borderRadius: radius.md,
+    ...continuousCorner,
     alignItems: 'center',
     justifyContent: 'center',
   },
   dateDay: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '800',
   },
   dateMonth: {
@@ -125,13 +107,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.foreground,
+    color: colors.label,
   },
   cardMeta: {
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: colors.secondaryLabel,
     marginTop: 2,
   },
 });

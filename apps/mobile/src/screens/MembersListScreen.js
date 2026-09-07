@@ -1,13 +1,13 @@
-import React, { useMemo, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 import Screen from '../components/Screen';
 import SearchInput from '../components/SearchInput';
+import HeaderButton from '../components/HeaderButton';
 import Avatar from '../components/Avatar';
 import Badge from '../components/Badge';
 import EmptyState from '../components/EmptyState';
-import { colors, radius } from '../theme/colors';
+import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { MEMBER_STATUS_COLORS } from '../lib/constants';
 import { useCollection } from '../lib/useCollection';
 
@@ -16,6 +16,12 @@ export default function MembersListScreen({ navigation }) {
   const { items, loading, refreshing, refresh, reload } = useCollection('members', {
     sort: 'name',
   });
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => <HeaderButton icon="add-circle" onPress={() => navigation.navigate('MemberForm')} />,
+    });
+  }, [navigation]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -33,13 +39,7 @@ export default function MembersListScreen({ navigation }) {
   }, [items, search]);
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Text style={styles.title}>Membres</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('MemberForm')}>
-          <Ionicons name="add" size={22} color={colors.primaryForeground} />
-        </TouchableOpacity>
-      </View>
+    <Screen edges={['bottom', 'left', 'right']}>
       <SearchInput value={search} onChangeText={setSearch} placeholder="Rechercher un membre..." />
       <FlatList
         data={filtered}
@@ -57,6 +57,7 @@ export default function MembersListScreen({ navigation }) {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.row}
+            activeOpacity={0.7}
             onPress={() => navigation.navigate('MemberDetail', { id: item.id })}
           >
             <Avatar name={item.name} color={MEMBER_STATUS_COLORS[item.status] || colors.primary} />
@@ -79,53 +80,33 @@ export default function MembersListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.foreground,
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   list: {
     paddingHorizontal: 16,
+    paddingTop: 4,
     paddingBottom: 24,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
+    ...continuousCorner,
     padding: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 8,
+    marginBottom: 10,
     gap: 12,
+    ...shadow.card,
   },
   rowInfo: {
     flex: 1,
   },
   rowName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.foreground,
+    color: colors.label,
   },
   rowMeta: {
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: colors.secondaryLabel,
     marginTop: 2,
   },
 });

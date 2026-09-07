@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, radius } from '../theme/colors';
+import Row from './Row';
+import { colors } from '../theme/colors';
 import { formatDate } from '../lib/format';
 
+// On iOS this renders the native "compact" picker — a small pill button
+// that opens the system date/time popover in place (the same control iOS
+// uses in Calendar/Reminders). Android has no compact variant, so it falls
+// back to a Row that opens the standard modal picker on tap.
 export default function DateField({ label, value, onChange }) {
   const [showPicker, setShowPicker] = useState(false);
   const dateValue = value ? new Date(value) : new Date();
@@ -15,48 +19,40 @@ export default function DateField({ label, value, onChange }) {
     if (selectedDate) onChange(selectedDate.toISOString());
   };
 
-  return (
-    <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
-      <TouchableOpacity style={styles.button} onPress={() => setShowPicker(true)}>
-        <Text style={styles.value}>{value ? formatDate(value, "d MMM yyyy 'à' HH:mm") : 'Choisir une date'}</Text>
-        <Ionicons name="calendar-outline" size={18} color={colors.mutedForeground} />
-      </TouchableOpacity>
-      {showPicker && (
+  if (Platform.OS === 'ios') {
+    return (
+      <View style={styles.iosRow}>
+        <Text style={styles.iosLabel}>{label}</Text>
         <DateTimePicker
           value={dateValue}
           mode="datetime"
-          display={Platform.OS === 'ios' ? 'inline' : 'default'}
+          display="compact"
           onChange={handleChange}
+          accentColor={colors.primary}
         />
-      )}
-    </View>
+      </View>
+    );
+  }
+
+  return (
+    <>
+      <Row label={label} value={formatDate(value, "d MMM yyyy 'à' HH:mm")} onPress={() => setShowPicker(true)} />
+      {showPicker && <DateTimePicker value={dateValue} mode="datetime" display="default" onChange={handleChange} />}
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  field: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.foreground,
-    marginBottom: 6,
-  },
-  button: {
+  iosRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: colors.card,
+    minHeight: 46,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
-  value: {
-    fontSize: 15,
-    color: colors.foreground,
+  iosLabel: {
+    fontSize: 16,
+    color: colors.label,
   },
 });

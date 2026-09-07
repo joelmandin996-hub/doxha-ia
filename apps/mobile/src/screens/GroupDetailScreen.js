@@ -1,12 +1,15 @@
-import React, { useCallback, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useLayoutEffect, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '../components/Screen';
 import Avatar from '../components/Avatar';
 import Badge from '../components/Badge';
+import GroupedSection from '../components/GroupedSection';
+import Row from '../components/Row';
+import HeaderButton from '../components/HeaderButton';
 import EmptyState from '../components/EmptyState';
-import { colors, radius } from '../theme/colors';
+import { colors, continuousCorner, radius } from '../theme/colors';
 import { GROUP_TYPE_COLORS } from '../lib/constants';
 import pb from '../lib/pocketbase';
 
@@ -39,6 +42,14 @@ export default function GroupDetailScreen({ route, navigation }) {
     }, [load])
   );
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <HeaderButton label="Modifier" bold onPress={() => navigation.navigate('GroupForm', { id })} />
+      ),
+    });
+  }, [navigation, id]);
+
   const handleDelete = () => {
     Alert.alert('Supprimer ce groupe ?', 'Cette action est irréversible.', [
       { text: 'Annuler', style: 'cancel' },
@@ -57,60 +68,53 @@ export default function GroupDetailScreen({ route, navigation }) {
     ]);
   };
 
-  if (loading || !group) return <Screen />;
+  if (loading || !group) return <Screen edges={['bottom', 'left', 'right']} />;
 
   const color = GROUP_TYPE_COLORS[group.type] || colors.secondary;
 
   return (
-    <Screen>
+    <Screen edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.header}>
-          <View style={[styles.iconWrap, { backgroundColor: `${color}1a` }]}>
-            <Ionicons name="people" size={28} color={color} />
+        <View style={styles.hero}>
+          <View style={[styles.iconWrap, { backgroundColor: `${color}1f` }]}>
+            <Ionicons name="people" size={30} color={color} />
           </View>
           <Text style={styles.name}>{group.name}</Text>
           {group.type ? <Badge label={group.type} color={color} /> : null}
         </View>
 
-        <View style={styles.actionsRow}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('GroupForm', { id: group.id })}
-          >
-            <Ionicons name="create-outline" size={18} color={colors.primary} />
-            <Text style={styles.actionText}>Modifier</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
-            <Ionicons name="trash-outline" size={18} color={colors.destructive} />
-            <Text style={[styles.actionText, { color: colors.destructive }]}>Supprimer</Text>
-          </TouchableOpacity>
-        </View>
+        <GroupedSection>
+          <Row icon="person-outline" iconColor={colors.primary} label="Responsable" value={group.expand?.responsible?.name} placeholder="Aucun" />
+        </GroupedSection>
 
         {group.description ? (
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>Description</Text>
-            <Text style={styles.cardText}>{group.description}</Text>
-          </View>
+          <GroupedSection title="Description">
+            <View style={styles.textRow}>
+              <Text style={styles.textRowValue}>{group.description}</Text>
+            </View>
+          </GroupedSection>
         ) : null}
 
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Responsable</Text>
-          <Text style={styles.cardText}>{group.expand?.responsible?.name || 'Aucun responsable assigné'}</Text>
-        </View>
-
-        <Text style={styles.sectionTitle}>Membres ({members.length})</Text>
-        {members.length === 0 ? (
-          <EmptyState title="Aucun membre" subtitle="Ce groupe n'a pas encore de membres." />
-        ) : (
-          members.map((member) => (
-            <View key={member.id} style={styles.memberRow}>
-              <Avatar name={member.name} size={36} />
-              <Text style={styles.memberName} numberOfLines={1}>
-                {member.name}
-              </Text>
+        <GroupedSection title={`Membres (${members.length})`}>
+          {members.length === 0 ? (
+            <View style={styles.emptyRow}>
+              <EmptyState title="Aucun membre" subtitle="Ce groupe n'a pas encore de membres." />
             </View>
-          ))
-        )}
+          ) : (
+            members.map((member) => (
+              <View key={member.id} style={styles.memberRow}>
+                <Avatar name={member.name} size={32} />
+                <Text style={styles.memberName} numberOfLines={1}>
+                  {member.name}
+                </Text>
+              </View>
+            ))
+          )}
+        </GroupedSection>
+
+        <GroupedSection>
+          <Row label="Supprimer le groupe" danger onPress={handleDelete} />
+        </GroupedSection>
       </ScrollView>
     </Screen>
   );
@@ -121,82 +125,46 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 32,
   },
-  header: {
+  hero: {
     alignItems: 'center',
-    marginBottom: 16,
-    gap: 8,
+    marginBottom: 24,
+    gap: 10,
   },
   iconWrap: {
-    width: 64,
-    height: 64,
+    width: 72,
+    height: 72,
     borderRadius: radius.lg,
+    ...continuousCorner,
     alignItems: 'center',
     justifyContent: 'center',
   },
   name: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.foreground,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingVertical: 10,
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 16,
-    marginBottom: 16,
-  },
-  cardLabel: {
-    fontSize: 12,
-    color: colors.mutedForeground,
-    marginBottom: 4,
-  },
-  cardText: {
-    fontSize: 15,
-    color: colors.foreground,
-  },
-  sectionTitle: {
-    fontSize: 17,
+    fontSize: 22,
     fontWeight: '700',
-    color: colors.foreground,
-    marginBottom: 12,
+    color: colors.label,
+  },
+  textRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  textRowValue: {
+    fontSize: 15,
+    color: colors.label,
+    lineHeight: 21,
+  },
+  emptyRow: {
+    paddingVertical: 8,
   },
   memberRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 10,
-    marginBottom: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
   memberName: {
-    fontSize: 14,
-    color: colors.foreground,
+    fontSize: 16,
+    color: colors.label,
     flex: 1,
   },
 });

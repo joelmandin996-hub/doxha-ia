@@ -1,11 +1,13 @@
-import React, { useCallback, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useLayoutEffect, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 import Screen from '../components/Screen';
 import Badge from '../components/Badge';
 import ChipSelect from '../components/ChipSelect';
-import { colors, radius } from '../theme/colors';
+import GroupedSection from '../components/GroupedSection';
+import Row from '../components/Row';
+import HeaderButton from '../components/HeaderButton';
+import { colors } from '../theme/colors';
 import { formatDate } from '../lib/format';
 import { SUIVI_PRIORITY_COLORS, SUIVI_STATUSES, SUIVI_STATUS_COLORS } from '../lib/constants';
 import pb from '../lib/pocketbase';
@@ -33,6 +35,14 @@ export default function SuiviDetailScreen({ route, navigation }) {
       load();
     }, [load])
   );
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <HeaderButton label="Modifier" bold onPress={() => navigation.navigate('SuiviForm', { id })} />
+      ),
+    });
+  }, [navigation, id]);
 
   const handleStatusChange = async (statut) => {
     setUpdatingStatus(true);
@@ -64,12 +74,12 @@ export default function SuiviDetailScreen({ route, navigation }) {
     ]);
   };
 
-  if (loading || !suivi) return <Screen />;
+  if (loading || !suivi) return <Screen edges={['bottom', 'left', 'right']} />;
 
   return (
-    <Screen>
+    <Screen edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.header}>
+        <View style={styles.hero}>
           <Text style={styles.name}>{suivi.expand?.membre_id?.name || suivi.description || 'Sans nom'}</Text>
           <View style={styles.badgeRow}>
             <Badge label={suivi.type || 'Suivi'} color={colors.module.followups} />
@@ -79,46 +89,29 @@ export default function SuiviDetailScreen({ route, navigation }) {
           </View>
         </View>
 
-        <View style={styles.actionsRow}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('SuiviForm', { id: suivi.id })}
-          >
-            <Ionicons name="create-outline" size={18} color={colors.primary} />
-            <Text style={styles.actionText}>Modifier</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
-            <Ionicons name="trash-outline" size={18} color={colors.destructive} />
-            <Text style={[styles.actionText, { color: colors.destructive }]}>Supprimer</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Statut</Text>
-          <ChipSelect
-            options={SUIVI_STATUSES}
-            value={suivi.statut}
-            onChange={handleStatusChange}
-            colorFor={(option) => SUIVI_STATUS_COLORS[option]}
-          />
-          {updatingStatus ? <Text style={styles.updating}>Mise à jour...</Text> : null}
-        </View>
+        <GroupedSection title="Statut" footer={updatingStatus ? 'Mise à jour...' : undefined}>
+          <ChipSelect options={SUIVI_STATUSES} value={suivi.statut} onChange={handleStatusChange} colorFor={(option) => SUIVI_STATUS_COLORS[option]} inset />
+        </GroupedSection>
 
         {suivi.sous_rubrique ? (
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>Sous-rubrique</Text>
-            <Text style={styles.cardText}>{suivi.sous_rubrique}</Text>
-          </View>
+          <GroupedSection>
+            <Row label="Sous-rubrique" value={suivi.sous_rubrique} />
+          </GroupedSection>
         ) : null}
 
         {suivi.notes ? (
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>Notes</Text>
-            <Text style={styles.cardText}>{suivi.notes}</Text>
-          </View>
+          <GroupedSection title="Notes">
+            <View style={styles.textRow}>
+              <Text style={styles.textRowValue}>{suivi.notes}</Text>
+            </View>
+          </GroupedSection>
         ) : null}
 
         <Text style={styles.createdAt}>Créé le {formatDate(suivi.created)}</Text>
+
+        <GroupedSection>
+          <Row label="Supprimer le suivi" danger onPress={handleDelete} />
+        </GroupedSection>
       </ScrollView>
     </Screen>
   );
@@ -129,66 +122,32 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 32,
   },
-  header: {
-    marginBottom: 16,
-    gap: 8,
+  hero: {
+    marginBottom: 20,
+    gap: 10,
   },
   name: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.foreground,
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.label,
   },
   badgeRow: {
     flexDirection: 'row',
     gap: 8,
   },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
+  textRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingVertical: 10,
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 16,
-    marginBottom: 16,
-  },
-  cardLabel: {
-    fontSize: 12,
-    color: colors.mutedForeground,
-    marginBottom: 8,
-  },
-  cardText: {
+  textRowValue: {
     fontSize: 15,
-    color: colors.foreground,
-    lineHeight: 20,
-  },
-  updating: {
-    fontSize: 12,
-    color: colors.mutedForeground,
+    color: colors.label,
+    lineHeight: 21,
   },
   createdAt: {
-    fontSize: 12,
-    color: colors.mutedForeground,
+    fontSize: 13,
+    color: colors.secondaryLabel,
     textAlign: 'center',
+    marginBottom: 20,
   },
 });

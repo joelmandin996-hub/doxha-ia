@@ -10,7 +10,8 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius } from '../theme/colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginScreen() {
@@ -42,9 +43,14 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.card}>
-        <View style={styles.logoMark}>
-          <Ionicons name="heart" size={28} color={colors.primaryForeground} />
-        </View>
+        <LinearGradient
+          colors={[colors.primary, colors.secondary]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.logoMark}
+        >
+          <Ionicons name="heart" size={28} color="#ffffff" />
+        </LinearGradient>
         <Text style={styles.title}>Doxha Church</Text>
         <Text style={styles.subtitle}>Connectez-vous pour accéder à votre église</Text>
 
@@ -54,7 +60,7 @@ export default function LoginScreen() {
             value={email}
             onChangeText={setEmail}
             placeholder="vous@eglise.org"
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={colors.tertiaryLabel}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
@@ -68,7 +74,7 @@ export default function LoginScreen() {
             value={password}
             onChangeText={setPassword}
             placeholder="••••••••"
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={colors.tertiaryLabel}
             secureTextEntry
             style={styles.input}
           />
@@ -80,6 +86,7 @@ export default function LoginScreen() {
           style={[styles.button, loading && styles.buttonDisabled]}
           onPress={handleSubmit}
           disabled={loading}
+          activeOpacity={0.85}
         >
           {loading ? (
             <ActivityIndicator color={colors.primaryForeground} />
@@ -95,7 +102,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   wrap: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.groupedBackground,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -105,29 +112,29 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     backgroundColor: colors.card,
     borderRadius: radius.lg,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: colors.border,
+    ...continuousCorner,
+    padding: 28,
+    ...shadow.raised,
   },
   logoMark: {
-    width: 52,
-    height: 52,
+    width: 56,
+    height: 56,
     borderRadius: radius.md,
-    backgroundColor: colors.primary,
+    ...continuousCorner,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 18,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800',
-    color: colors.foreground,
+    color: colors.label,
   },
   subtitle: {
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: colors.secondaryLabel,
     marginTop: 4,
-    marginBottom: 24,
+    marginBottom: 26,
   },
   field: {
     marginBottom: 16,
@@ -135,18 +142,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.foreground,
+    color: colors.label,
     marginBottom: 6,
   },
   input: {
-    borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: radius.md,
+    ...continuousCorner,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    fontSize: 15,
-    color: colors.foreground,
-    backgroundColor: colors.background,
+    fontSize: 16,
+    color: colors.label,
+    backgroundColor: colors.fill,
   },
   error: {
     color: colors.destructive,
@@ -156,7 +162,8 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: colors.primary,
     borderRadius: radius.md,
-    paddingVertical: 14,
+    ...continuousCorner,
+    paddingVertical: 15,
     alignItems: 'center',
     marginTop: 4,
   },
@@ -166,6 +173,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: colors.primaryForeground,
     fontWeight: '700',
-    fontSize: 15,
+    fontSize: 16,
   },
 });

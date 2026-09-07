@@ -1,15 +1,16 @@
 import React from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Screen from '../components/Screen';
 import Avatar from '../components/Avatar';
-import { colors, radius } from '../theme/colors';
+import GroupedSection from '../components/GroupedSection';
+import Row from '../components/Row';
+import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { useAuth } from '../contexts/AuthContext';
 
 const ITEMS = [
   { key: 'Events', label: 'Événements', icon: 'calendar-outline', color: colors.module.events },
   { key: 'Donations', label: 'Dons', icon: 'heart-outline', color: colors.module.donations },
-  { key: 'Settings', label: 'Paramètres', icon: 'settings-outline', color: colors.mutedForeground },
+  { key: 'Settings', label: 'Paramètres', icon: 'settings-outline', color: colors.secondaryLabel },
 ];
 
 export default function MoreScreen({ navigation }) {
@@ -23,12 +24,10 @@ export default function MoreScreen({ navigation }) {
   };
 
   return (
-    <Screen>
+    <Screen edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>Plus</Text>
-
         <View style={styles.profileCard}>
-          <Avatar name={currentUser?.name || currentUser?.email} size={48} />
+          <Avatar name={currentUser?.name || currentUser?.email} size={52} />
           <View style={styles.profileInfo}>
             <Text style={styles.profileName} numberOfLines={1}>
               {currentUser?.name || 'Utilisateur'}
@@ -39,20 +38,21 @@ export default function MoreScreen({ navigation }) {
           </View>
         </View>
 
-        {ITEMS.map((item) => (
-          <TouchableOpacity key={item.key} style={styles.row} onPress={() => navigation.navigate(item.key)}>
-            <View style={[styles.iconWrap, { backgroundColor: `${item.color}1a` }]}>
-              <Ionicons name={item.icon} size={18} color={item.color} />
-            </View>
-            <Text style={styles.rowLabel}>{item.label}</Text>
-            <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
-          </TouchableOpacity>
-        ))}
+        <GroupedSection>
+          {ITEMS.map((item) => (
+            <Row
+              key={item.key}
+              icon={item.icon}
+              iconColor={item.color}
+              label={item.label}
+              onPress={() => navigation.navigate(item.key)}
+            />
+          ))}
+        </GroupedSection>
 
-        <TouchableOpacity style={styles.logoutRow} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={18} color={colors.destructive} />
-          <Text style={styles.logoutLabel}>Déconnexion</Text>
-        </TouchableOpacity>
+        <GroupedSection>
+          <Row label="Déconnexion" danger onPress={handleLogout} />
+        </GroupedSection>
       </ScrollView>
     </Screen>
   );
@@ -63,71 +63,28 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 32,
   },
-  title: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.foreground,
-    marginBottom: 16,
-  },
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
     backgroundColor: colors.card,
     borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    ...continuousCorner,
     padding: 16,
-    marginBottom: 20,
+    marginBottom: 24,
+    ...shadow.card,
   },
   profileInfo: {
     flex: 1,
   },
   profileName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
-    color: colors.foreground,
+    color: colors.label,
   },
   profileEmail: {
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: colors.secondaryLabel,
     marginTop: 2,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 14,
-    marginBottom: 8,
-  },
-  iconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rowLabel: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.foreground,
-  },
-  logoutRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    marginTop: 12,
-  },
-  logoutLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.destructive,
   },
 });

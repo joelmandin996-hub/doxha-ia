@@ -1,11 +1,12 @@
-import React from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useLayoutEffect } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import Screen from '../components/Screen';
 import Badge from '../components/Badge';
+import HeaderButton from '../components/HeaderButton';
 import EmptyState from '../components/EmptyState';
-import { colors, radius } from '../theme/colors';
+import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { formatDate } from '../lib/format';
 import { formatAmount } from '../lib/currency';
 import { useCollection } from '../lib/useCollection';
@@ -19,6 +20,12 @@ export default function DonationsListScreen({ navigation }) {
     expand: 'membre_id',
   });
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => <HeaderButton icon="add-circle" onPress={() => navigation.navigate('DonationForm')} />,
+    });
+  }, [navigation]);
+
   useFocusEffect(
     React.useCallback(() => {
       reload();
@@ -29,22 +36,23 @@ export default function DonationsListScreen({ navigation }) {
   const total = items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Text style={styles.title}>Dons</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('DonationForm')}>
-          <Ionicons name="add" size={22} color={colors.primaryForeground} />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.totalCard}>
-        <Text style={styles.totalLabel}>Total des dons affichés</Text>
-        <Text style={styles.totalValue}>{formatAmount(total)}</Text>
-      </View>
+    <Screen edges={['bottom', 'left', 'right']}>
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
+        ListHeaderComponent={
+          <LinearGradient
+            colors={[colors.module.donations, colors.rose]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.totalCard}
+          >
+            <Text style={styles.totalLabel}>Total des dons affichés</Text>
+            <Text style={styles.totalValue}>{formatAmount(total)}</Text>
+          </LinearGradient>
+        }
         ListEmptyComponent={!loading ? <EmptyState title="Aucun don enregistré" /> : null}
         renderItem={({ item }) => (
           <View style={styles.card}>
@@ -68,57 +76,36 @@ export default function DonationsListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.foreground,
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  totalCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 16,
-  },
-  totalLabel: {
-    fontSize: 12,
-    color: colors.mutedForeground,
-  },
-  totalValue: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: colors.module.donations,
-    marginTop: 2,
-  },
   list: {
     paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 24,
+  },
+  totalCard: {
+    borderRadius: radius.lg,
+    ...continuousCorner,
+    padding: 20,
+    marginBottom: 16,
+    ...shadow.raised,
+  },
+  totalLabel: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.85)',
+    fontWeight: '600',
+  },
+  totalValue: {
+    fontSize: 30,
+    fontWeight: '800',
+    color: '#ffffff',
+    marginTop: 4,
   },
   card: {
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
+    ...continuousCorner,
     padding: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 8,
+    marginBottom: 10,
+    ...shadow.card,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -128,12 +115,12 @@ const styles = StyleSheet.create({
   },
   cardName: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.foreground,
+    color: colors.label,
   },
   cardAmount: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.module.donations,
   },
@@ -145,6 +132,6 @@ const styles = StyleSheet.create({
   },
   cardMeta: {
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: colors.secondaryLabel,
   },
 });

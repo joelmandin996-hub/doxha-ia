@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 import Screen from '../components/Screen';
-import FormField from '../components/FormField';
+import GroupedSection from '../components/GroupedSection';
+import FormRow from '../components/FormRow';
+import Row from '../components/Row';
 import ChipSelect from '../components/ChipSelect';
-import PickerField from '../components/PickerField';
-import PrimaryButton from '../components/PrimaryButton';
+import HeaderButton from '../components/HeaderButton';
+import { colors } from '../theme/colors';
 import { GROUP_TYPE_COLORS } from '../lib/constants';
 import pb from '../lib/pocketbase';
 
@@ -17,40 +19,7 @@ export default function GroupFormScreen({ route, navigation }) {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(!!id);
 
-  useEffect(() => {
-    navigation.setOptions({ title: id ? 'Modifier le groupe' : 'Nouveau groupe' });
-  }, [navigation, id]);
-
-  useEffect(() => {
-    if (!id) return;
-    (async () => {
-      try {
-        const record = await pb.collection('groups').getOne(id, { expand: 'responsible' });
-        setForm({
-          name: record.name || '',
-          description: record.description || '',
-          type: record.type || 'Cellule',
-          responsible: record.responsible || '',
-        });
-        setResponsibleName(record.expand?.responsible?.name || '');
-      } catch (err) {
-        Alert.alert('Erreur', 'Impossible de charger ce groupe.');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [id]);
-
   const setField = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }));
-
-  const openMemberPicker = () => {
-    navigation.navigate('MemberPicker', {
-      onSelect: (member) => {
-        setField('responsible')(member.id);
-        setResponsibleName(member.name);
-      },
-    });
-  };
 
   const handleSave = async () => {
     if (!form.name.trim()) {
@@ -72,29 +41,74 @@ export default function GroupFormScreen({ route, navigation }) {
     }
   };
 
-  if (loading) return <Screen />;
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: id ? 'Modifier' : 'Nouveau groupe',
+      headerLeft: () => <HeaderButton label="Annuler" onPress={() => navigation.goBack()} />,
+      headerRight: () => (
+        <HeaderButton
+          label="Enregistrer"
+          bold
+          color={saving ? colors.tertiaryLabel : colors.primary}
+          onPress={saving ? undefined : handleSave}
+        />
+      ),
+    });
+  }, [navigation, id, form, saving]);
+
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      try {
+        const record = await pb.collection('groups').getOne(id, { expand: 'responsible' });
+        setForm({
+          name: record.name || '',
+          description: record.description || '',
+          type: record.type || 'Cellule',
+          responsible: record.responsible || '',
+        });
+        setResponsibleName(record.expand?.responsible?.name || '');
+      } catch (err) {
+        Alert.alert('Erreur', 'Impossible de charger ce groupe.');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id]);
+
+  const openMemberPicker = () => {
+    navigation.navigate('MemberPicker', {
+      onSelect: (member) => {
+        setField('responsible')(member.id);
+        setResponsibleName(member.name);
+      },
+    });
+  };
+
+  if (loading) return <Screen edges={['bottom', 'left', 'right']} />;
 
   return (
-    <Screen>
+    <Screen edges={['bottom', 'left', 'right']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <FormField label="Nom du groupe" value={form.name} onChangeText={setField('name')} placeholder="Cellule Nord" />
-          <ChipSelect
-            label="Type"
-            options={TYPE_OPTIONS}
-            value={form.type}
-            onChange={setField('type')}
-            colorFor={(option) => GROUP_TYPE_COLORS[option]}
-          />
-          <PickerField label="Responsable" value={responsibleName} onPress={openMemberPicker} />
-          <FormField
-            label="Description"
-            value={form.description}
-            onChangeText={setField('description')}
-            placeholder="Description du groupe..."
-            multiline
-          />
-          <PrimaryButton label="Enregistrer" onPress={handleSave} loading={saving} />
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          <GroupedSection>
+            <FormRow label="Nom" value={form.name} onChangeText={setField('name')} placeholder="Cellule Nord" />
+            <Row label="Responsable" value={responsibleName} placeholder="Aucun" onPress={openMemberPicker} />
+          </GroupedSection>
+
+          <GroupedSection title="Type">
+            <ChipSelect
+              options={TYPE_OPTIONS}
+              value={form.type}
+              onChange={setField('type')}
+              colorFor={(option) => GROUP_TYPE_COLORS[option]}
+              inset
+            />
+          </GroupedSection>
+
+          <GroupedSection title="Description">
+            <FormRow value={form.description} onChangeText={setField('description')} placeholder="Description du groupe..." multiline />
+          </GroupedSection>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
@@ -105,6 +119,6 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 40,
   },
 });

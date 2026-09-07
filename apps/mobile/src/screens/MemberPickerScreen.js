@@ -5,7 +5,7 @@ import Screen from '../components/Screen';
 import SearchInput from '../components/SearchInput';
 import Avatar from '../components/Avatar';
 import EmptyState from '../components/EmptyState';
-import { colors } from '../theme/colors';
+import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { useCollection } from '../lib/useCollection';
 
 // Generic "pick a member" screen used by group/suivi/donation forms.
@@ -22,27 +22,30 @@ export default function MemberPickerScreen({ route, navigation }) {
   }, [items, search]);
 
   return (
-    <Screen>
+    <Screen edges={['bottom', 'left', 'right']}>
       <SearchInput value={search} onChangeText={setSearch} placeholder="Rechercher un membre..." />
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         ListEmptyComponent={!loading ? <EmptyState title="Aucun membre trouvé" /> : null}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.row}
-            onPress={() => {
-              onSelect?.(item);
-              navigation.goBack();
-            }}
-          >
-            <Avatar name={item.name} size={36} />
-            <Text style={styles.rowName} numberOfLines={1}>
-              {item.name}
-            </Text>
-            <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
-          </TouchableOpacity>
+        renderItem={({ item, index }) => (
+          <View style={[styles.card, index === 0 && styles.cardFirst]}>
+            <TouchableOpacity
+              style={styles.row}
+              activeOpacity={0.6}
+              onPress={() => {
+                onSelect?.(item);
+                navigation.goBack();
+              }}
+            >
+              <Avatar name={item.name} size={36} />
+              <Text style={styles.rowName} numberOfLines={1}>
+                {item.name}
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.tertiaryLabel} />
+            </TouchableOpacity>
+          </View>
         )}
       />
     </Screen>
@@ -54,17 +57,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 24,
   },
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    ...continuousCorner,
+    marginTop: 8,
+    ...shadow.card,
+  },
+  cardFirst: {
+    marginTop: 0,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
   },
   rowName: {
     flex: 1,
-    fontSize: 15,
-    color: colors.foreground,
+    fontSize: 16,
+    color: colors.label,
   },
 });

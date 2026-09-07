@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '../components/Screen';
 import Badge from '../components/Badge';
+import HeaderButton from '../components/HeaderButton';
 import EmptyState from '../components/EmptyState';
-import { colors, radius } from '../theme/colors';
+import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { GROUP_TYPE_COLORS } from '../lib/constants';
 import { useCollection } from '../lib/useCollection';
 
@@ -15,6 +16,12 @@ export default function GroupsListScreen({ navigation }) {
     expand: 'responsible',
   });
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => <HeaderButton icon="add-circle" onPress={() => navigation.navigate('GroupForm')} />,
+    });
+  }, [navigation]);
+
   useFocusEffect(
     React.useCallback(() => {
       reload();
@@ -23,13 +30,7 @@ export default function GroupsListScreen({ navigation }) {
   );
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Text style={styles.title}>Groupes</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('GroupForm')}>
-          <Ionicons name="add" size={22} color={colors.primaryForeground} />
-        </TouchableOpacity>
-      </View>
+    <Screen edges={['bottom', 'left', 'right']}>
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
@@ -43,9 +44,10 @@ export default function GroupsListScreen({ navigation }) {
           return (
             <TouchableOpacity
               style={styles.card}
+              activeOpacity={0.7}
               onPress={() => navigation.navigate('GroupDetail', { id: item.id })}
             >
-              <View style={[styles.iconWrap, { backgroundColor: `${color}1a` }]}>
+              <View style={[styles.iconWrap, { backgroundColor: `${color}1f` }]}>
                 <Ionicons name="people" size={20} color={color} />
               </View>
               <View style={styles.cardInfo}>
@@ -66,46 +68,27 @@ export default function GroupsListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.foreground,
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   list: {
     paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 24,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
+    ...continuousCorner,
     padding: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 8,
+    marginBottom: 10,
     gap: 12,
+    ...shadow.card,
   },
   iconWrap: {
     width: 44,
     height: 44,
     borderRadius: radius.md,
+    ...continuousCorner,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -113,13 +96,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.foreground,
+    color: colors.label,
   },
   cardMeta: {
     fontSize: 13,
-    color: colors.mutedForeground,
+    color: colors.secondaryLabel,
     marginTop: 2,
   },
 });

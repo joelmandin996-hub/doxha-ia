@@ -1,5 +1,7 @@
 import React from 'react';
+import { Platform, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import DashboardNavigator from './DashboardNavigator';
 import MembersNavigator from './MembersNavigator';
@@ -11,11 +13,11 @@ import { colors } from '../theme/colors';
 const Tab = createBottomTabNavigator();
 
 const ICONS = {
-  Dashboard: 'home',
-  Members: 'people',
-  Groups: 'people-circle',
-  Suivis: 'git-branch',
-  More: 'menu',
+  Dashboard: ['home-outline', 'home'],
+  Members: ['people-outline', 'people'],
+  Groups: ['people-circle-outline', 'people-circle'],
+  Suivis: ['git-branch-outline', 'git-branch'],
+  More: ['ellipsis-horizontal-circle-outline', 'ellipsis-horizontal-circle'],
 };
 
 export default function MainTabs() {
@@ -24,11 +26,17 @@ export default function MainTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.mutedForeground,
-        tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
-        tabBarIcon: ({ color, size }) => (
-          <Ionicons name={ICONS[route.name] || 'ellipse'} size={size} color={color} />
-        ),
+        tabBarInactiveTintColor: colors.tertiaryLabel,
+        tabBarStyle: styles.tabBar,
+        tabBarBackground:
+          Platform.OS === 'ios'
+            ? () => <BlurView intensity={80} tint="light" style={StyleSheet.absoluteFill} />
+            : undefined,
+        tabBarLabelStyle: styles.tabBarLabel,
+        tabBarIcon: ({ color, size, focused }) => {
+          const [outline, filled] = ICONS[route.name] || ['ellipse-outline', 'ellipse'];
+          return <Ionicons name={focused ? filled : outline} size={size - 2} color={color} />;
+        },
       })}
     >
       <Tab.Screen name="Dashboard" component={DashboardNavigator} options={{ tabBarLabel: 'Accueil' }} />
@@ -39,3 +47,16 @@ export default function MainTabs() {
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    borderTopWidth: 0.5,
+    borderTopColor: colors.separator,
+    elevation: 0,
+    backgroundColor: Platform.OS === 'ios' ? 'transparent' : colors.card,
+  },
+  tabBarLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+});

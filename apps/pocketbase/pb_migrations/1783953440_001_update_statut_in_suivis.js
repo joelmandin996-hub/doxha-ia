@@ -1,0 +1,21 @@
+/// <reference path="../pb_data/types.d.ts" />
+migrate((app) => {
+  const collection = app.findCollectionByNameOrId("suivis");
+  const field = collection.fields.getByName("statut");
+  field.values = ["nouveau_visiteur", "premier_contact", "premier_rendez_vous", "participation_reguliere", "cellule", "membre_actif", "serviteur", "integre"];
+  return app.save(collection);
+}, (app) => {
+  try {
+  const collection = app.findCollectionByNameOrId("suivis");
+  const field = collection.fields.getByName("statut");
+  if (!field) { console.log("Field not found, skipping revert"); return; }
+  field.values = ["nouveau", "a_contacter", "contact_en_cours", "rendez_vous_effectue", "accompagnement_en_cours", "en_attente", "resolu", "archive"];
+  return app.save(collection);
+  } catch (e) {
+    if (e.message.includes("no rows in result set")) {
+      console.log("Collection or field not found, skipping revert");
+      return;
+    }
+    throw e;
+  }
+})

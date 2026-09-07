@@ -1,0 +1,376 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Premium Modern Design System - Light Theme */
+    --background: 220 24% 98%;
+    --foreground: 224 40% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 224 40% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 40% 12%;
+
+    /* Primary: Royal Indigo */
+    --primary: 238 78% 58%;
+    --primary-foreground: 210 40% 98%;
+
+    /* Secondary: Soft Violet */
+    --secondary: 265 72% 60%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Tertiary accents */
+    --teal: 174 70% 40%;
+    --coral: 8 82% 60%;
+    --amber: 34 94% 52%;
+    --rose: 340 78% 58%;
+    --sky: 205 88% 52%;
+    --emerald: 156 68% 40%;
+
+    --accent: 238 83% 96%;
+    --accent-foreground: 238 78% 52%;
+
+    --muted: 222 20% 96%;
+    --muted-foreground: 222 12% 46%;
+
+    /* Semantic Status Colors */
+    --success: 152 68% 38%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 36 94% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 348 80% 54%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 222 20% 90%;
+    --input: 222 20% 90%;
+    --ring: 238 78% 58%;
+
+    --radius: 1rem;
+
+    /* Module color tokens */
+    --mod-members: 205 88% 52%;
+    --mod-groups: 265 72% 60%;
+    --mod-events: 156 68% 40%;
+    --mod-calendar: 34 94% 52%;
+    --mod-agenda: 8 82% 60%;
+    --mod-followups: 238 78% 58%;
+    --mod-budget: 174 70% 40%;
+    --mod-donations: 340 78% 58%;
+    --mod-comm: 291 70% 55%;
+    --mod-inventory: 230 84% 60%;
+
+    /* Finance semantics */
+    --revenue: 152 68% 38%;
+    --expense: 348 80% 54%;
+    --donation: 340 78% 58%;
+
+    /* Kanban card shadows */
+    --kanban-card-shadow: 0 1px 2px hsl(224 40% 12% / 0.04), 0 6px 16px -8px hsl(224 40% 12% / 0.10);
+    --kanban-card-shadow-hover: 0 2px 4px hsl(224 40% 12% / 0.05), 0 14px 28px -12px hsl(224 40% 12% / 0.16);
+    --kanban-card-shadow-drag: 0 18px 40px -12px hsl(238 78% 40% / 0.28);
+
+    /* Premium Typography Variables */
+    --font-premium: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", "Plus Jakarta Sans", Roboto, Helvetica, Arial, sans-serif;
+    --letter-spacing-tight: -1px;
+    --letter-spacing-normal: -0.5px;
+    --line-height-tight: 1.4;
+    --line-height-normal: 1.6;
+  }
+
+  .dark {
+    --background: 226 44% 6%;
+    --foreground: 210 40% 98%;
+
+    --card: 226 40% 9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 226 40% 9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 238 84% 68%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 265 76% 70%;
+    --secondary-foreground: 0 0% 100%;
+
+    --teal: 174 62% 48%;
+    --coral: 8 82% 66%;
+    --amber: 40 94% 58%;
+    --rose: 340 78% 66%;
+    --sky: 205 88% 62%;
+    --emerald: 156 62% 48%;
+
+    --accent: 238 38% 20%;
+    --accent-foreground: 238 84% 84%;
+
+    --muted: 226 34% 14%;
+    --muted-foreground: 217 18% 68%;
+
+    --success: 152 62% 46%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 42 94% 56%;
+    --warning-foreground: 226 44% 6%;
+
+    --destructive: 348 82% 62%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 226 30% 18%;
+    --input: 226 30% 18%;
+    --ring: 238 84% 68%;
+
+    --mod-members: 205 88% 64%;
+    --mod-groups: 265 76% 70%;
+    --mod-events: 156 62% 48%;
+    --mod-calendar: 40 94% 58%;
+    --mod-agenda: 8 82% 66%;
+    --mod-followups: 238 84% 68%;
+    --mod-budget: 174 62% 48%;
+    --mod-donations: 340 78% 66%;
+    --mod-comm: 291 72% 66%;
+    --mod-inventory: 230 84% 68%;
+
+    --revenue: 152 62% 48%;
+    --expense: 348 82% 62%;
+    --donation: 340 78% 66%;
+
+    --kanban-card-shadow: 0 1px 2px hsl(0 0% 0% / 0.4), 0 6px 18px -10px hsl(0 0% 0% / 0.6);
+    --kanban-card-shadow-hover: 0 2px 6px hsl(0 0% 0% / 0.45), 0 16px 32px -14px hsl(0 0% 0% / 0.7);
+    --kanban-card-shadow-drag: 0 20px 44px -14px hsl(238 84% 50% / 0.5);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-premium tracking-premium leading-premium;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    background-image:
+      radial-gradient(60rem 40rem at 8% -10%, hsl(var(--primary) / 0.06), transparent 60%),
+      radial-gradient(50rem 36rem at 105% 0%, hsl(var(--secondary) / 0.06), transparent 60%);
+    background-attachment: fixed;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-premium tracking-premium-tight font-semibold leading-premium-tight;
+    text-wrap: balance;
+  }
+  p {
+    @apply font-premium tracking-premium leading-premium font-normal;
+    text-wrap: pretty;
+  }
+
+  /* Colored focus rings on inputs / selects / textareas */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role="combobox"]:focus-visible {
+    border-color: hsl(var(--primary) / 0.55) !important;
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.12) !important;
+    outline: none !important;
+  }
+}
+
+@layer utilities {
+  .tabular-nums-custom {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .premium-shadow {
+    box-shadow: 0 1px 2px hsl(224 40% 12% / 0.04), 0 10px 30px -12px hsl(224 40% 12% / 0.12);
+  }
+  .dark .premium-shadow {
+    box-shadow: 0 1px 2px hsl(0 0% 0% / 0.5), 0 12px 30px -14px hsl(0 0% 0% / 0.7);
+  }
+
+  .premium-shadow-hover {
+    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms ease-out;
+  }
+  .premium-shadow-hover:hover {
+    box-shadow: 0 2px 6px hsl(224 40% 12% / 0.06), 0 18px 40px -14px hsl(238 78% 40% / 0.22);
+    transform: translateY(-2px);
+  }
+
+  .text-gradient {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-image: linear-gradient(120deg, hsl(var(--primary)), hsl(var(--secondary)) 60%, hsl(var(--sky)));
+  }
+
+  /* Premium Typography Utilities */
+  .font-premium {
+    font-family: var(--font-premium);
+  }
+  .tracking-premium {
+    letter-spacing: var(--letter-spacing-normal);
+  }
+  .tracking-premium-tight {
+    letter-spacing: var(--letter-spacing-tight);
+  }
+  .leading-premium {
+    line-height: var(--line-height-normal);
+  }
+  .leading-premium-tight {
+    line-height: var(--line-height-tight);
+  }
+
+  /* Finance tints used by budget module */
+  .text-revenue { color: hsl(var(--revenue)); }
+  .text-expense { color: hsl(var(--expense)); }
+  .text-donation { color: hsl(var(--donation)); }
+  .bg-revenue-muted { background-color: hsl(var(--revenue) / 0.12); }
+  .bg-expense-muted { background-color: hsl(var(--expense) / 0.12); }
+  .bg-donation-muted { background-color: hsl(var(--donation) / 0.12); }
+}
+
+@layer components {
+  /* Semantic Badges */
+  .badge-success {
+    @apply bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/25 font-premium tracking-premium font-semibold;
+  }
+  .badge-warning {
+    @apply bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/25 font-premium tracking-premium font-semibold;
+  }
+  .badge-destructive {
+    @apply bg-[hsl(var(--destructive))]/10 text-[hsl(var(--destructive))] border-[hsl(var(--destructive))]/25 font-premium tracking-premium font-semibold;
+  }
+  .badge-primary {
+    @apply bg-primary/10 text-primary border-primary/25 font-premium tracking-premium font-semibold;
+  }
+  .badge-muted {
+    @apply bg-muted text-muted-foreground border-border font-premium tracking-premium font-medium;
+  }
+
+  /* Glass surfaces */
+  .glass-panel {
+    background: linear-gradient(180deg, hsl(var(--card) / 0.85), hsl(var(--card) / 0.6));
+    backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid hsl(var(--border) / 0.8);
+    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.35), 0 12px 32px -18px hsl(224 40% 12% / 0.28);
+  }
+  .dark .glass-panel {
+    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.06), 0 14px 34px -18px hsl(0 0% 0% / 0.8);
+  }
+
+  /* Gradient primary action */
+  .btn-gradient {
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+    color: hsl(var(--primary-foreground));
+    box-shadow: 0 8px 20px -10px hsl(var(--primary) / 0.6);
+  }
+  .btn-gradient:hover {
+    filter: brightness(1.05);
+  }
+
+  /* Kanban */
+  .kanban-column {
+    @apply flex flex-col w-[300px] shrink-0 rounded-2xl border bg-card/70 overflow-hidden;
+    max-height: 100%;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 1px 2px hsl(224 40% 12% / 0.04), 0 14px 34px -22px hsl(224 40% 12% / 0.3);
+  }
+  .kanban-drag-transition {
+    transition: box-shadow 200ms ease-out, transform 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms ease-out;
+  }
+
+  /* Group type chips */
+  .group-type-badge {
+    @apply inline-flex items-center rounded-full border text-xs font-semibold px-2.5 py-1;
+  }
+
+  /* Calendar event bars */
+  .event-bar {
+    @apply flex items-center gap-1 text-[11px] px-1.5 py-0.5 border cursor-pointer transition-all duration-200 overflow-hidden;
+    border-radius: 0.5rem;
+  }
+  .event-bar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px -8px hsl(224 40% 12% / 0.4);
+  }
+  .event-bar-start { border-top-right-radius: 0; border-bottom-right-radius: 0; border-right-width: 0; }
+  .event-bar-middle { border-radius: 0; border-left-width: 0; border-right-width: 0; }
+  .event-bar-end { border-top-left-radius: 0; border-bottom-left-radius: 0; border-left-width: 0; }
+
+  /* Colored tab underline */
+  [role="tablist"] [role="tab"] {
+    transition: color 180ms ease-out, border-color 180ms ease-out, background-color 180ms ease-out;
+  }
+
+  /* Modal headers get a subtle color wash */
+  [role="dialog"] > div:first-child {
+    background-image: linear-gradient(135deg, hsl(var(--primary) / 0.06), hsl(var(--secondary) / 0.05));
+  }
+
+  /* Table row hover polish */
+  tbody tr {
+    transition: background-color 160ms ease-out;
+  }
+
+  /* Premium sidebar nav items */
+  .nav-item {
+    @apply relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 font-premium tracking-premium;
+  }
+  .nav-item-active {
+    @apply text-primary-foreground shadow-[0_8px_20px_-10px_hsl(var(--primary)/0.7)];
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  }
+  .nav-item-idle {
+    @apply text-muted-foreground hover:bg-muted hover:text-foreground;
+  }
+  .nav-item-idle:hover {
+    transform: translateX(2px);
+  }
+
+  /* Premium auth card */
+  .auth-card {
+    background: linear-gradient(180deg, hsl(var(--card) / 0.9), hsl(var(--card) / 0.7));
+    backdrop-filter: blur(18px) saturate(150%);
+    border: 1px solid hsl(var(--border) / 0.8);
+    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.4), 0 24px 60px -24px hsl(238 78% 40% / 0.35);
+  }
+  .dark .auth-card {
+    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.06), 0 24px 60px -24px hsl(0 0% 0% / 0.8);
+  }
+
+  /* Premium logo mark */
+  .logo-mark {
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+    box-shadow: 0 6px 18px -8px hsl(var(--primary) / 0.6);
+  }
+
+  /* Glass app shell */
+  .sidebar-shell {
+    background: linear-gradient(180deg, hsl(var(--card) / 0.92), hsl(var(--card) / 0.78));
+    backdrop-filter: blur(16px) saturate(140%);
+    box-shadow: inset -1px 0 0 hsl(var(--border) / 0.4);
+  }
+  .header-shell {
+    box-shadow: 0 1px 0 hsl(var(--border) / 0.5), 0 8px 24px -18px hsl(224 40% 12% / 0.25);
+  }
+  .dark .header-shell {
+    box-shadow: 0 1px 0 hsl(var(--border) / 0.5), 0 8px 24px -18px hsl(0 0% 0% / 0.6);
+  }
+}

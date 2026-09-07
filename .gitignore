@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.log
+.DS_Store
+
+# Pocketbase runtime (binary + data are environment-specific, not source)
+apps/pocketbase/pocketbase
+apps/pocketbase/pb_data/
+
+# Expo / React Native
+apps/mobile/.expo/
+apps/mobile/node_modules/
+apps/mobile/dist/
+apps/mobile/web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision

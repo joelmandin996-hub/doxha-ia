@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Doxha Church",
+    "slug": "doxha-church",
+    "scheme": "doxhachurch",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#f9f9fb",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "org.doxhachurch.mobile"
+    },
+    "android": {
+      "package": "org.doxhachurch.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

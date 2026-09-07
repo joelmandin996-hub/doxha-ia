@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,8 +11,53 @@ import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { GROUP_TYPE_COLORS } from '../lib/constants';
 import { useCollection } from '../lib/useCollection';
 import { autoInset } from '../lib/scrollProps';
-import { showItemActions } from '../lib/actionSheet';
+import { usePeekMenu } from '../contexts/PeekMenuContext';
 import pb from '../lib/pocketbase';
+
+function GroupRowContent({ item }) {
+  const color = GROUP_TYPE_COLORS[item.type] || colors.secondary;
+  return (
+    <View style={styles.card}>
+      <View style={[styles.iconWrap, { backgroundColor: `${color}1f` }]}>
+        <Ionicons name="people" size={20} color={color} />
+      </View>
+      <View style={styles.cardInfo}>
+        <Text style={styles.cardName} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <Text style={styles.cardMeta} numberOfLines={1}>
+          {item.expand?.responsible?.name ? `Responsable : ${item.expand.responsible.name}` : 'Sans responsable'}
+        </Text>
+      </View>
+      {item.type ? <Badge label={item.type} color={color} /> : null}
+    </View>
+  );
+}
+
+function GroupRow({ item, onPress, onEdit, onDelete }) {
+  const rowRef = useRef(null);
+  const { showPeek } = usePeekMenu();
+
+  const openPeek = () => {
+    showPeek(
+      rowRef.current,
+      <GroupRowContent item={item} />,
+      [
+        { label: 'Modifier', icon: 'create-outline', onPress: onEdit },
+        { label: 'Supprimer', icon: 'trash-outline', destructive: true, onPress: onDelete },
+      ],
+      onPress
+    );
+  };
+
+  return (
+    <SwipeableRow onDelete={onDelete}>
+      <TouchableOpacity ref={rowRef} activeOpacity={0.7} onPress={onPress} onLongPress={openPeek}>
+        <GroupRowContent item={item} />
+      </TouchableOpacity>
+    </SwipeableRow>
+  );
+}
 
 export default function GroupsListScreen({ navigation }) {
   const { items, loading, refreshing, refresh, reload } = useCollection('groups', {
@@ -62,38 +107,14 @@ export default function GroupsListScreen({ navigation }) {
         ListEmptyComponent={
           !loading ? <EmptyState title="Aucun groupe" subtitle="Créez votre premier groupe." /> : null
         }
-        renderItem={({ item }) => {
-          const color = GROUP_TYPE_COLORS[item.type] || colors.secondary;
-          return (
-            <SwipeableRow onDelete={() => confirmDelete(item)}>
-              <TouchableOpacity
-                style={styles.card}
-                activeOpacity={0.7}
-                onPress={() => navigation.navigate('GroupDetail', { id: item.id })}
-                onLongPress={() =>
-                  showItemActions({
-                    title: item.name,
-                    onEdit: () => navigation.navigate('GroupForm', { id: item.id }),
-                    onDelete: () => confirmDelete(item),
-                  })
-                }
-              >
-                <View style={[styles.iconWrap, { backgroundColor: `${color}1f` }]}>
-                  <Ionicons name="people" size={20} color={color} />
-                </View>
-                <View style={styles.cardInfo}>
-                  <Text style={styles.cardName} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  <Text style={styles.cardMeta} numberOfLines={1}>
-                    {item.expand?.responsible?.name ? `Responsable : ${item.expand.responsible.name}` : 'Sans responsable'}
-                  </Text>
-                </View>
-                {item.type ? <Badge label={item.type} color={color} /> : null}
-              </TouchableOpacity>
-            </SwipeableRow>
-          );
-        }}
+        renderItem={({ item }) => (
+          <GroupRow
+            item={item}
+            onPress={() => navigation.navigate('GroupDetail', { id: item.id })}
+            onEdit={() => navigation.navigate('GroupForm', { id: item.id })}
+            onDelete={() => confirmDelete(item)}
+          />
+        )}
       />
     </Screen>
   );

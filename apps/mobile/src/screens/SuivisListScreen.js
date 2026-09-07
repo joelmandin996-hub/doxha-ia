@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../components/Screen';
@@ -13,10 +13,52 @@ import { SUIVI_STATUSES, SUIVI_STATUS_COLORS } from '../lib/constants';
 import { formatDate } from '../lib/format';
 import { useCollection } from '../lib/useCollection';
 import { autoInset } from '../lib/scrollProps';
-import { showItemActions } from '../lib/actionSheet';
+import { usePeekMenu } from '../contexts/PeekMenuContext';
 import pb from '../lib/pocketbase';
 
 const FILTER_OPTIONS = ['Tous', ...SUIVI_STATUSES];
+
+function SuiviRowContent({ item }) {
+  const color = SUIVI_STATUS_COLORS[item.statut] || colors.primary;
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardName} numberOfLines={1}>
+          {item.expand?.membre_id?.name || item.description || 'Sans nom'}
+        </Text>
+        <Badge label={item.statut} color={color} />
+      </View>
+      <Text style={styles.cardMeta} numberOfLines={1}>
+        {item.type || 'Suivi'} · {formatDate(item.created)}
+      </Text>
+    </View>
+  );
+}
+
+function SuiviRow({ item, onPress, onEdit, onDelete }) {
+  const rowRef = useRef(null);
+  const { showPeek } = usePeekMenu();
+
+  const openPeek = () => {
+    showPeek(
+      rowRef.current,
+      <SuiviRowContent item={item} />,
+      [
+        { label: 'Modifier', icon: 'create-outline', onPress: onEdit },
+        { label: 'Supprimer', icon: 'trash-outline', destructive: true, onPress: onDelete },
+      ],
+      onPress
+    );
+  };
+
+  return (
+    <SwipeableRow onDelete={onDelete}>
+      <TouchableOpacity ref={rowRef} activeOpacity={0.7} onPress={onPress} onLongPress={openPeek}>
+        <SuiviRowContent item={item} />
+      </TouchableOpacity>
+    </SwipeableRow>
+  );
+}
 
 export default function SuivisListScreen({ navigation }) {
   const [search, setSearch] = useState('');
@@ -85,35 +127,14 @@ export default function SuivisListScreen({ navigation }) {
         ListEmptyComponent={
           !loading ? <EmptyState title="Aucun suivi" subtitle="Créez votre premier suivi." /> : null
         }
-        renderItem={({ item }) => {
-          const color = SUIVI_STATUS_COLORS[item.statut] || colors.primary;
-          return (
-            <SwipeableRow onDelete={() => confirmDelete(item)}>
-              <TouchableOpacity
-                style={styles.card}
-                activeOpacity={0.7}
-                onPress={() => navigation.navigate('SuiviDetail', { id: item.id })}
-                onLongPress={() =>
-                  showItemActions({
-                    title: item.expand?.membre_id?.name || item.description,
-                    onEdit: () => navigation.navigate('SuiviForm', { id: item.id }),
-                    onDelete: () => confirmDelete(item),
-                  })
-                }
-              >
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardName} numberOfLines={1}>
-                    {item.expand?.membre_id?.name || item.description || 'Sans nom'}
-                  </Text>
-                  <Badge label={item.statut} color={color} />
-                </View>
-                <Text style={styles.cardMeta} numberOfLines={1}>
-                  {item.type || 'Suivi'} · {formatDate(item.created)}
-                </Text>
-              </TouchableOpacity>
-            </SwipeableRow>
-          );
-        }}
+        renderItem={({ item }) => (
+          <SuiviRow
+            item={item}
+            onPress={() => navigation.navigate('SuiviDetail', { id: item.id })}
+            onEdit={() => navigation.navigate('SuiviForm', { id: item.id })}
+            onDelete={() => confirmDelete(item)}
+          />
+        )}
       />
     </Screen>
   );

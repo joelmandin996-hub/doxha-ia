@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../components/Screen';
@@ -12,8 +12,52 @@ import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { MEMBER_STATUS_COLORS } from '../lib/constants';
 import { useCollection } from '../lib/useCollection';
 import { autoInset } from '../lib/scrollProps';
-import { showItemActions } from '../lib/actionSheet';
+import { usePeekMenu } from '../contexts/PeekMenuContext';
 import pb from '../lib/pocketbase';
+
+function MemberRowContent({ item }) {
+  return (
+    <View style={styles.row}>
+      <Avatar name={item.name} color={MEMBER_STATUS_COLORS[item.status] || colors.primary} />
+      <View style={styles.rowInfo}>
+        <Text style={styles.rowName} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <Text style={styles.rowMeta} numberOfLines={1}>
+          {item.email || item.phone || '—'}
+        </Text>
+      </View>
+      {item.status ? (
+        <Badge label={item.status} color={MEMBER_STATUS_COLORS[item.status] || colors.primary} />
+      ) : null}
+    </View>
+  );
+}
+
+function MemberRow({ item, onPress, onEdit, onDelete }) {
+  const rowRef = useRef(null);
+  const { showPeek } = usePeekMenu();
+
+  const openPeek = () => {
+    showPeek(
+      rowRef.current,
+      <MemberRowContent item={item} />,
+      [
+        { label: 'Modifier', icon: 'create-outline', onPress: onEdit },
+        { label: 'Supprimer', icon: 'trash-outline', destructive: true, onPress: onDelete },
+      ],
+      onPress
+    );
+  };
+
+  return (
+    <SwipeableRow onDelete={onDelete}>
+      <TouchableOpacity ref={rowRef} activeOpacity={0.7} onPress={onPress} onLongPress={openPeek}>
+        <MemberRowContent item={item} />
+      </TouchableOpacity>
+    </SwipeableRow>
+  );
+}
 
 export default function MembersListScreen({ navigation }) {
   const [search, setSearch] = useState('');
@@ -78,33 +122,12 @@ export default function MembersListScreen({ navigation }) {
           ) : null
         }
         renderItem={({ item }) => (
-          <SwipeableRow onDelete={() => confirmDelete(item)}>
-            <TouchableOpacity
-              style={styles.row}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate('MemberDetail', { id: item.id })}
-              onLongPress={() =>
-                showItemActions({
-                  title: item.name,
-                  onEdit: () => navigation.navigate('MemberForm', { id: item.id }),
-                  onDelete: () => confirmDelete(item),
-                })
-              }
-            >
-              <Avatar name={item.name} color={MEMBER_STATUS_COLORS[item.status] || colors.primary} />
-              <View style={styles.rowInfo}>
-                <Text style={styles.rowName} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <Text style={styles.rowMeta} numberOfLines={1}>
-                  {item.email || item.phone || '—'}
-                </Text>
-              </View>
-              {item.status ? (
-                <Badge label={item.status} color={MEMBER_STATUS_COLORS[item.status] || colors.primary} />
-              ) : null}
-            </TouchableOpacity>
-          </SwipeableRow>
+          <MemberRow
+            item={item}
+            onPress={() => navigation.navigate('MemberDetail', { id: item.id })}
+            onEdit={() => navigation.navigate('MemberForm', { id: item.id })}
+            onDelete={() => confirmDelete(item)}
+          />
         )}
       />
     </Screen>

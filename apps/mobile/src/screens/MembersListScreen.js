@@ -1,9 +1,10 @@
 import React, { useLayoutEffect, useMemo, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../components/Screen';
 import SearchInput from '../components/SearchInput';
 import HeaderButton from '../components/HeaderButton';
+import SwipeableRow from '../components/SwipeableRow';
 import Avatar from '../components/Avatar';
 import Badge from '../components/Badge';
 import EmptyState from '../components/EmptyState';
@@ -11,6 +12,8 @@ import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { MEMBER_STATUS_COLORS } from '../lib/constants';
 import { useCollection } from '../lib/useCollection';
 import { autoInset } from '../lib/scrollProps';
+import { showItemActions } from '../lib/actionSheet';
+import pb from '../lib/pocketbase';
 
 export default function MembersListScreen({ navigation }) {
   const [search, setSearch] = useState('');
@@ -39,6 +42,24 @@ export default function MembersListScreen({ navigation }) {
     );
   }, [items, search]);
 
+  const confirmDelete = (member) => {
+    Alert.alert('Supprimer ce membre ?', member.name, [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await pb.collection('members').delete(member.id);
+            reload();
+          } catch (err) {
+            Alert.alert('Erreur', 'La suppression a échoué.');
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <Screen edges={['bottom', 'left', 'right']}>
       <SearchInput value={search} onChangeText={setSearch} placeholder="Rechercher un membre..." />
@@ -57,24 +78,33 @@ export default function MembersListScreen({ navigation }) {
           ) : null
         }
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.row}
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('MemberDetail', { id: item.id })}
-          >
-            <Avatar name={item.name} color={MEMBER_STATUS_COLORS[item.status] || colors.primary} />
-            <View style={styles.rowInfo}>
-              <Text style={styles.rowName} numberOfLines={1}>
-                {item.name}
-              </Text>
-              <Text style={styles.rowMeta} numberOfLines={1}>
-                {item.email || item.phone || '—'}
-              </Text>
-            </View>
-            {item.status ? (
-              <Badge label={item.status} color={MEMBER_STATUS_COLORS[item.status] || colors.primary} />
-            ) : null}
-          </TouchableOpacity>
+          <SwipeableRow onDelete={() => confirmDelete(item)}>
+            <TouchableOpacity
+              style={styles.row}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('MemberDetail', { id: item.id })}
+              onLongPress={() =>
+                showItemActions({
+                  title: item.name,
+                  onEdit: () => navigation.navigate('MemberForm', { id: item.id }),
+                  onDelete: () => confirmDelete(item),
+                })
+              }
+            >
+              <Avatar name={item.name} color={MEMBER_STATUS_COLORS[item.status] || colors.primary} />
+              <View style={styles.rowInfo}>
+                <Text style={styles.rowName} numberOfLines={1}>
+                  {item.name}
+                </Text>
+                <Text style={styles.rowMeta} numberOfLines={1}>
+                  {item.email || item.phone || '—'}
+                </Text>
+              </View>
+              {item.status ? (
+                <Badge label={item.status} color={MEMBER_STATUS_COLORS[item.status] || colors.primary} />
+              ) : null}
+            </TouchableOpacity>
+          </SwipeableRow>
         )}
       />
     </Screen>
@@ -94,7 +124,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     ...continuousCorner,
     padding: 12,
-    marginBottom: 10,
     gap: 12,
     ...shadow.card,
   },

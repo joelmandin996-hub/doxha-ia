@@ -1,15 +1,18 @@
 import React, { useLayoutEffect } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../components/Screen';
 import Badge from '../components/Badge';
 import HeaderButton from '../components/HeaderButton';
+import SwipeableRow from '../components/SwipeableRow';
 import EmptyState from '../components/EmptyState';
 import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS } from '../lib/constants';
 import { formatDate } from '../lib/format';
 import { useCollection } from '../lib/useCollection';
 import { autoInset } from '../lib/scrollProps';
+import { showItemActions } from '../lib/actionSheet';
+import pb from '../lib/pocketbase';
 
 export default function EventsListScreen({ navigation }) {
   const { items, loading, refreshing, refresh, reload } = useCollection('evenements', {
@@ -29,6 +32,24 @@ export default function EventsListScreen({ navigation }) {
     }, [])
   );
 
+  const confirmDelete = (event) => {
+    Alert.alert('Supprimer cet événement ?', event.titre, [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await pb.collection('evenements').delete(event.id);
+            reload();
+          } catch (err) {
+            Alert.alert('Erreur', 'La suppression a échoué.');
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <Screen edges={['bottom', 'left', 'right']}>
       <FlatList
@@ -43,27 +64,36 @@ export default function EventsListScreen({ navigation }) {
         renderItem={({ item }) => {
           const color = EVENT_STATUS_COLORS[item.statut] || colors.module.events;
           return (
-            <TouchableOpacity
-              style={styles.card}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate('EventDetail', { id: item.id })}
-            >
-              <View style={[styles.dateBox, { backgroundColor: `${color}1f` }]}>
-                <Text style={[styles.dateDay, { color }]}>{formatDate(item.date_debut, 'd')}</Text>
-                <Text style={[styles.dateMonth, { color }]}>{formatDate(item.date_debut, 'MMM')}</Text>
-              </View>
-              <View style={styles.cardInfo}>
-                <Text style={styles.cardTitle} numberOfLines={1}>
-                  {item.titre}
-                </Text>
-                <Text style={styles.cardMeta} numberOfLines={1}>
-                  {item.categorie || 'Événement'} {item.lieu ? `· ${item.lieu}` : ''}
-                </Text>
-              </View>
-              {item.statut ? (
-                <Badge label={EVENT_STATUS_LABELS[item.statut] || item.statut} color={color} />
-              ) : null}
-            </TouchableOpacity>
+            <SwipeableRow onDelete={() => confirmDelete(item)}>
+              <TouchableOpacity
+                style={styles.card}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('EventDetail', { id: item.id })}
+                onLongPress={() =>
+                  showItemActions({
+                    title: item.titre,
+                    onEdit: () => navigation.navigate('EventForm', { id: item.id }),
+                    onDelete: () => confirmDelete(item),
+                  })
+                }
+              >
+                <View style={[styles.dateBox, { backgroundColor: `${color}1f` }]}>
+                  <Text style={[styles.dateDay, { color }]}>{formatDate(item.date_debut, 'd')}</Text>
+                  <Text style={[styles.dateMonth, { color }]}>{formatDate(item.date_debut, 'MMM')}</Text>
+                </View>
+                <View style={styles.cardInfo}>
+                  <Text style={styles.cardTitle} numberOfLines={1}>
+                    {item.titre}
+                  </Text>
+                  <Text style={styles.cardMeta} numberOfLines={1}>
+                    {item.categorie || 'Événement'} {item.lieu ? `· ${item.lieu}` : ''}
+                  </Text>
+                </View>
+                {item.statut ? (
+                  <Badge label={EVENT_STATUS_LABELS[item.statut] || item.statut} color={color} />
+                ) : null}
+              </TouchableOpacity>
+            </SwipeableRow>
           );
         }}
       />
@@ -84,7 +114,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     ...continuousCorner,
     padding: 12,
-    marginBottom: 10,
     gap: 12,
     ...shadow.card,
   },

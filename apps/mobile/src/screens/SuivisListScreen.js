@@ -1,17 +1,20 @@
 import React, { useLayoutEffect, useMemo, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../components/Screen';
 import SearchInput from '../components/SearchInput';
 import ChipSelect from '../components/ChipSelect';
 import Badge from '../components/Badge';
 import HeaderButton from '../components/HeaderButton';
+import SwipeableRow from '../components/SwipeableRow';
 import EmptyState from '../components/EmptyState';
 import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { SUIVI_STATUSES, SUIVI_STATUS_COLORS } from '../lib/constants';
 import { formatDate } from '../lib/format';
 import { useCollection } from '../lib/useCollection';
 import { autoInset } from '../lib/scrollProps';
+import { showItemActions } from '../lib/actionSheet';
+import pb from '../lib/pocketbase';
 
 const FILTER_OPTIONS = ['Tous', ...SUIVI_STATUSES];
 
@@ -46,6 +49,24 @@ export default function SuivisListScreen({ navigation }) {
     });
   }, [items, search, statusFilter]);
 
+  const confirmDelete = (suivi) => {
+    Alert.alert('Supprimer ce suivi ?', suivi.expand?.membre_id?.name || suivi.description, [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await pb.collection('suivis').delete(suivi.id);
+            reload();
+          } catch (err) {
+            Alert.alert('Erreur', 'La suppression a échoué.');
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <Screen edges={['bottom', 'left', 'right']}>
       <SearchInput value={search} onChangeText={setSearch} placeholder="Rechercher un suivi..." />
@@ -67,21 +88,30 @@ export default function SuivisListScreen({ navigation }) {
         renderItem={({ item }) => {
           const color = SUIVI_STATUS_COLORS[item.statut] || colors.primary;
           return (
-            <TouchableOpacity
-              style={styles.card}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate('SuiviDetail', { id: item.id })}
-            >
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardName} numberOfLines={1}>
-                  {item.expand?.membre_id?.name || item.description || 'Sans nom'}
+            <SwipeableRow onDelete={() => confirmDelete(item)}>
+              <TouchableOpacity
+                style={styles.card}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('SuiviDetail', { id: item.id })}
+                onLongPress={() =>
+                  showItemActions({
+                    title: item.expand?.membre_id?.name || item.description,
+                    onEdit: () => navigation.navigate('SuiviForm', { id: item.id }),
+                    onDelete: () => confirmDelete(item),
+                  })
+                }
+              >
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardName} numberOfLines={1}>
+                    {item.expand?.membre_id?.name || item.description || 'Sans nom'}
+                  </Text>
+                  <Badge label={item.statut} color={color} />
+                </View>
+                <Text style={styles.cardMeta} numberOfLines={1}>
+                  {item.type || 'Suivi'} · {formatDate(item.created)}
                 </Text>
-                <Badge label={item.statut} color={color} />
-              </View>
-              <Text style={styles.cardMeta} numberOfLines={1}>
-                {item.type || 'Suivi'} · {formatDate(item.created)}
-              </Text>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </SwipeableRow>
           );
         }}
       />
@@ -100,7 +130,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     ...continuousCorner,
     padding: 14,
-    marginBottom: 10,
     ...shadow.card,
   },
   cardHeader: {

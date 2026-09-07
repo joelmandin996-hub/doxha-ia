@@ -11,6 +11,7 @@ import { colors } from '../theme/colors';
 import { formatDate } from '../lib/format';
 import { MEMBER_STATUS_COLORS } from '../lib/constants';
 import pb from '../lib/pocketbase';
+import { autoInset } from '../lib/scrollProps';
 
 export default function MemberDetailScreen({ route, navigation }) {
   const { id } = route.params;
@@ -67,7 +68,7 @@ export default function MemberDetailScreen({ route, navigation }) {
 
   return (
     <Screen edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} {...autoInset}>
         <View style={styles.hero}>
           <Avatar name={member.name} size={80} color={MEMBER_STATUS_COLORS[member.status] || colors.primary} />
           <Text style={styles.name}>{member.name}</Text>

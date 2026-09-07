@@ -10,6 +10,7 @@ import HeaderButton from '../components/HeaderButton';
 import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS } from '../lib/constants';
 import { colors } from '../theme/colors';
 import pb from '../lib/pocketbase';
+import { autoInset } from '../lib/scrollProps';
 
 const CATEGORY_OPTIONS = [
   "Réunion de prière",
@@ -126,7 +127,7 @@ export default function EventFormScreen({ route, navigation }) {
   return (
     <Screen edges={['bottom', 'left', 'right']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" {...autoInset}>
           <GroupedSection>
             <FormRow label="Titre" value={form.titre} onChangeText={setField('titre')} placeholder="Culte du dimanche" />
             <FormRow label="Lieu" value={form.lieu} onChangeText={setField('lieu')} placeholder="Salle principale" />

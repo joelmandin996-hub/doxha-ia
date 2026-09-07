@@ -10,6 +10,7 @@ import EmptyState from '../components/EmptyState';
 import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { MEMBER_STATUS_COLORS } from '../lib/constants';
 import { useCollection } from '../lib/useCollection';
+import { autoInset } from '../lib/scrollProps';
 
 export default function MembersListScreen({ navigation }) {
   const [search, setSearch] = useState('');
@@ -42,6 +43,7 @@ export default function MembersListScreen({ navigation }) {
     <Screen edges={['bottom', 'left', 'right']}>
       <SearchInput value={search} onChangeText={setSearch} placeholder="Rechercher un membre..." />
       <FlatList
+        {...autoInset}
         data={filtered}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}

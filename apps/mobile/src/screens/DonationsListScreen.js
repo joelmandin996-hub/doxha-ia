@@ -10,6 +10,7 @@ import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { formatDate } from '../lib/format';
 import { formatAmount } from '../lib/currency';
 import { useCollection } from '../lib/useCollection';
+import { autoInset } from '../lib/scrollProps';
 
 const STATUS_LABELS = { completed: 'Complété', pending: 'En attente' };
 const STATUS_COLORS = { completed: colors.success, pending: colors.warning };
@@ -38,6 +39,7 @@ export default function DonationsListScreen({ navigation }) {
   return (
     <Screen edges={['bottom', 'left', 'right']}>
       <FlatList
+        {...autoInset}
         data={items}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}

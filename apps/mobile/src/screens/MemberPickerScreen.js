@@ -7,6 +7,7 @@ import Avatar from '../components/Avatar';
 import EmptyState from '../components/EmptyState';
 import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { useCollection } from '../lib/useCollection';
+import { autoInset } from '../lib/scrollProps';
 
 // Generic "pick a member" screen used by group/suivi/donation forms.
 // The caller passes onSelect(member) via route params.
@@ -25,6 +26,7 @@ export default function MemberPickerScreen({ route, navigation }) {
     <Screen edges={['bottom', 'left', 'right']}>
       <SearchInput value={search} onChangeText={setSearch} placeholder="Rechercher un membre..." />
       <FlatList
+        {...autoInset}
         data={filtered}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}

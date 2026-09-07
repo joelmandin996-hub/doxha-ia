@@ -5,13 +5,14 @@ import GroupedSection from '../components/GroupedSection';
 import Row from '../components/Row';
 import { POCKETBASE_URL } from '../lib/pocketbase';
 import { useAuth } from '../contexts/AuthContext';
+import { autoInset } from '../lib/scrollProps';
 
 export default function SettingsScreen() {
   const { currentUser } = useAuth();
 
   return (
     <Screen edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} {...autoInset}>
         <GroupedSection title="Profil">
           <Row label="Nom" value={currentUser?.name} placeholder="—" />
           <Row label="Email" value={currentUser?.email} placeholder="—" />

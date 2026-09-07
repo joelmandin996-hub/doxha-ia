@@ -10,6 +10,7 @@ import { colors } from '../theme/colors';
 import { formatDate } from '../lib/format';
 import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS } from '../lib/constants';
 import pb from '../lib/pocketbase';
+import { autoInset } from '../lib/scrollProps';
 
 export default function EventDetailScreen({ route, navigation }) {
   const { id } = route.params;
@@ -66,7 +67,7 @@ export default function EventDetailScreen({ route, navigation }) {
 
   return (
     <Screen edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} {...autoInset}>
         <View style={styles.hero}>
           <Text style={styles.title}>{event.titre}</Text>
           {event.statut ? (

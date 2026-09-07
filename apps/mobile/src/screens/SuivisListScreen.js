@@ -11,6 +11,7 @@ import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { SUIVI_STATUSES, SUIVI_STATUS_COLORS } from '../lib/constants';
 import { formatDate } from '../lib/format';
 import { useCollection } from '../lib/useCollection';
+import { autoInset } from '../lib/scrollProps';
 
 const FILTER_OPTIONS = ['Tous', ...SUIVI_STATUSES];
 
@@ -55,6 +56,7 @@ export default function SuivisListScreen({ navigation }) {
         colorFor={(option) => (option === 'Tous' ? colors.primary : SUIVI_STATUS_COLORS[option])}
       />
       <FlatList
+        {...autoInset}
         data={filtered}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}

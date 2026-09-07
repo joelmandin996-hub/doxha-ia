@@ -9,6 +9,7 @@ import EmptyState from '../components/EmptyState';
 import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { GROUP_TYPE_COLORS } from '../lib/constants';
 import { useCollection } from '../lib/useCollection';
+import { autoInset } from '../lib/scrollProps';
 
 export default function GroupsListScreen({ navigation }) {
   const { items, loading, refreshing, refresh, reload } = useCollection('groups', {
@@ -32,6 +33,7 @@ export default function GroupsListScreen({ navigation }) {
   return (
     <Screen edges={['bottom', 'left', 'right']}>
       <FlatList
+        {...autoInset}
         data={items}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}

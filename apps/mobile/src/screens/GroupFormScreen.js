@@ -9,6 +9,7 @@ import HeaderButton from '../components/HeaderButton';
 import { colors } from '../theme/colors';
 import { GROUP_TYPE_COLORS } from '../lib/constants';
 import pb from '../lib/pocketbase';
+import { autoInset } from '../lib/scrollProps';
 
 const TYPE_OPTIONS = Object.keys(GROUP_TYPE_COLORS);
 
@@ -90,7 +91,7 @@ export default function GroupFormScreen({ route, navigation }) {
   return (
     <Screen edges={['bottom', 'left', 'right']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" {...autoInset}>
           <GroupedSection>
             <FormRow label="Nom" value={form.name} onChangeText={setField('name')} placeholder="Cellule Nord" />
             <Row label="Responsable" value={responsibleName} placeholder="Aucun" onPress={openMemberPicker} />

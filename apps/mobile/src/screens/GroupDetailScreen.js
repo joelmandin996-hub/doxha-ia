@@ -12,6 +12,7 @@ import EmptyState from '../components/EmptyState';
 import { colors, continuousCorner, radius } from '../theme/colors';
 import { GROUP_TYPE_COLORS } from '../lib/constants';
 import pb from '../lib/pocketbase';
+import { autoInset } from '../lib/scrollProps';
 
 export default function GroupDetailScreen({ route, navigation }) {
   const { id } = route.params;
@@ -74,7 +75,7 @@ export default function GroupDetailScreen({ route, navigation }) {
 
   return (
     <Screen edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} {...autoInset}>
         <View style={styles.hero}>
           <View style={[styles.iconWrap, { backgroundColor: `${color}1f` }]}>
             <Ionicons name="people" size={30} color={color} />

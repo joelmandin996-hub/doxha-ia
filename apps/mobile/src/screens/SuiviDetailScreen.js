@@ -11,6 +11,7 @@ import { colors } from '../theme/colors';
 import { formatDate } from '../lib/format';
 import { SUIVI_PRIORITY_COLORS, SUIVI_STATUSES, SUIVI_STATUS_COLORS } from '../lib/constants';
 import pb from '../lib/pocketbase';
+import { autoInset } from '../lib/scrollProps';
 
 export default function SuiviDetailScreen({ route, navigation }) {
   const { id } = route.params;
@@ -78,7 +79,7 @@ export default function SuiviDetailScreen({ route, navigation }) {
 
   return (
     <Screen edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} {...autoInset}>
         <View style={styles.hero}>
           <Text style={styles.name}>{suivi.expand?.membre_id?.name || suivi.description || 'Sans nom'}</Text>
           <View style={styles.badgeRow}>

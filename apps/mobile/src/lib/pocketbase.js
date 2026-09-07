@@ -7,10 +7,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const POCKETBASE_URL =
   process.env.EXPO_PUBLIC_POCKETBASE_URL || 'http://localhost:8090';
 
+export const AUTH_STORAGE_KEY = 'pb_auth';
+
 const authStore = new AsyncAuthStore({
-  save: async (serialized) => AsyncStorage.setItem('pb_auth', serialized),
-  initial: AsyncStorage.getItem('pb_auth'),
-  clear: async () => AsyncStorage.removeItem('pb_auth'),
+  save: async (serialized) => AsyncStorage.setItem(AUTH_STORAGE_KEY, serialized),
+  initial: AsyncStorage.getItem(AUTH_STORAGE_KEY),
+  clear: async () => AsyncStorage.removeItem(AUTH_STORAGE_KEY),
 });
 
 export const pb = new PocketBase(POCKETBASE_URL, authStore);

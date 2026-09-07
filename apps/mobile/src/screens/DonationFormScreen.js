@@ -9,6 +9,7 @@ import DateField from '../components/DateField';
 import HeaderButton from '../components/HeaderButton';
 import { colors } from '../theme/colors';
 import pb from '../lib/pocketbase';
+import { autoInset } from '../lib/scrollProps';
 
 const DON_TYPE_OPTIONS = ['unique', 'recurrent'];
 const DON_TYPE_LABELS = { unique: 'Don unique', recurrent: 'Don récurrent' };
@@ -85,7 +86,7 @@ export default function DonationFormScreen({ navigation }) {
   return (
     <Screen edges={['bottom', 'left', 'right']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" {...autoInset}>
           <GroupedSection>
             <Row label="Donateur" value={member?.name} placeholder="Choisir" onPress={openMemberPicker} />
             <FormRow label="Montant" value={amount} onChangeText={setAmount} placeholder="50 €" keyboardType="decimal-pad" />

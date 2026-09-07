@@ -9,6 +9,7 @@ import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS } from '../lib/constants';
 import { formatDate } from '../lib/format';
 import { useCollection } from '../lib/useCollection';
+import { autoInset } from '../lib/scrollProps';
 
 export default function EventsListScreen({ navigation }) {
   const { items, loading, refreshing, refresh, reload } = useCollection('evenements', {
@@ -31,6 +32,7 @@ export default function EventsListScreen({ navigation }) {
   return (
     <Screen edges={['bottom', 'left', 'right']}>
       <FlatList
+        {...autoInset}
         data={items}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}

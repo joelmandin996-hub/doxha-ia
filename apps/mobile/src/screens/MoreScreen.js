@@ -6,6 +6,7 @@ import GroupedSection from '../components/GroupedSection';
 import Row from '../components/Row';
 import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { useAuth } from '../contexts/AuthContext';
+import { autoInset } from '../lib/scrollProps';
 
 const ITEMS = [
   { key: 'Events', label: 'Événements', icon: 'calendar-outline', color: colors.module.events },
@@ -25,7 +26,7 @@ export default function MoreScreen({ navigation }) {
 
   return (
     <Screen edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} {...autoInset}>
         <View style={styles.profileCard}>
           <Avatar name={currentUser?.name || currentUser?.email} size={52} />
           <View style={styles.profileInfo}>

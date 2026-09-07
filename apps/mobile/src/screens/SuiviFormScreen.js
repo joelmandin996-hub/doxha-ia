@@ -9,6 +9,7 @@ import HeaderButton from '../components/HeaderButton';
 import { colors } from '../theme/colors';
 import { SUIVI_PRIORITY_COLORS, SUIVI_STATUS_COLORS, SUIVI_STATUSES } from '../lib/constants';
 import pb from '../lib/pocketbase';
+import { autoInset } from '../lib/scrollProps';
 
 const TYPE_OPTIONS = [
   'Nouveau membre',
@@ -115,7 +116,7 @@ export default function SuiviFormScreen({ route, navigation }) {
   return (
     <Screen edges={['bottom', 'left', 'right']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" {...autoInset}>
           <GroupedSection>
             <Row label="Membre concerné" value={memberName} placeholder="Choisir" onPress={openMemberPicker} />
             <FormRow label="Description" value={form.description} onChangeText={setField('description')} placeholder="Sujet du suivi" />

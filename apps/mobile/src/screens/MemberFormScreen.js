@@ -8,6 +8,7 @@ import HeaderButton from '../components/HeaderButton';
 import { colors } from '../theme/colors';
 import { MEMBER_STATUS_COLORS } from '../lib/constants';
 import pb from '../lib/pocketbase';
+import { autoInset } from '../lib/scrollProps';
 
 const STATUS_OPTIONS = Object.keys(MEMBER_STATUS_COLORS);
 
@@ -80,7 +81,7 @@ export default function MemberFormScreen({ route, navigation }) {
   return (
     <Screen edges={['bottom', 'left', 'right']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" {...autoInset}>
           <GroupedSection>
             <FormRow label="Nom" value={form.name} onChangeText={setField('name')} placeholder="Jean Dupont" />
             <FormRow

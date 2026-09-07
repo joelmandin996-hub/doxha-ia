@@ -63,7 +63,7 @@ export default function SuiviFormScreen({ route, navigation }) {
       if (id) {
         await pb.collection('suivis').update(id, form);
       } else {
-        await pb.collection('suivis').create(form);
+        await pb.collection('suivis').create({ ...form, created_by: pb.authStore.record.id });
       }
       navigation.goBack();
     } catch (err) {

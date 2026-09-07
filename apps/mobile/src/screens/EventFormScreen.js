@@ -71,7 +71,7 @@ export default function EventFormScreen({ route, navigation }) {
       if (id) {
         await pb.collection('evenements').update(id, payload);
       } else {
-        await pb.collection('evenements').create(payload);
+        await pb.collection('evenements').create({ ...payload, created_by: pb.authStore.record.id });
       }
       navigation.goBack();
     } catch (err) {

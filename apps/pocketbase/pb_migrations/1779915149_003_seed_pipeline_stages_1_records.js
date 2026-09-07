@@ -6,8 +6,13 @@ migrate((app) => {
     record0.set("name", "Test Stage");
     record0.set("color", "#3b82f6");
     record0.set("order", 0);
-    const record0_created_byLookup = app.findFirstRecordByFilter("users", "id != ''");
-    if (!record0_created_byLookup) { throw new Error("Lookup failed for created_by: no record in 'users' matching \"id != ''\""); }
+    let record0_created_byLookup;
+    try {
+      record0_created_byLookup = app.findFirstRecordByFilter("users", "id != ''");
+    } catch (e) {
+      console.log("No user found yet, skipping pipeline_stages seed (fresh install)");
+      return;
+    }
     record0.set("created_by", record0_created_byLookup.id);
   try {
     app.save(record0);

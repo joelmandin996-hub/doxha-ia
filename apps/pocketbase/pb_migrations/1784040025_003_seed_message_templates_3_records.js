@@ -9,8 +9,13 @@ migrate((app) => {
     record0.set("content", "Bienvenue {{prenom}} ! Nous sommes heureux de vous accueillir dans notre communaut\u00e9 {{groupe}}. Votre date d'adh\u00e9sion : {{date_adhesion}}");
     record0.set("variables", ["prenom", "groupe", "date_adhesion"]);
     record0.set("message_types", ["SMS", "Email", "WhatsApp"]);
-    const record0_created_byLookup = app.findFirstRecordByFilter("users", "id != ''");
-    if (!record0_created_byLookup) { throw new Error("Lookup failed for created_by: no record in 'users' matching \"id != ''\""); }
+    let record0_created_byLookup;
+    try {
+      record0_created_byLookup = app.findFirstRecordByFilter("users", "id != ''");
+    } catch (e) {
+      console.log("No user found yet, skipping message_templates seed (fresh install)");
+      return;
+    }
     record0.set("created_by", record0_created_byLookup.id);
   try {
     app.save(record0);

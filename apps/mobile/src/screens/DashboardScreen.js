@@ -22,11 +22,14 @@ export default function DashboardScreen({ navigation }) {
   const load = useCallback(async (isRefresh = false) => {
     isRefresh ? setRefreshing(true) : setLoading(true);
     try {
+      // $autoCancel: false is required here — the SDK cancels an earlier
+      // in-flight request to the same collection when a second one starts,
+      // and the two `suivis` calls below fire in the same batch.
       const [members, groups, suivis, recent] = await Promise.all([
-        pb.collection('members').getList(1, 1, { fields: 'id' }),
-        pb.collection('groups').getList(1, 1, { fields: 'id' }),
-        pb.collection('suivis').getList(1, 1, { fields: 'id' }),
-        pb.collection('suivis').getList(1, 5, { sort: '-created', expand: 'membre_id' }),
+        pb.collection('members').getList(1, 1, { fields: 'id', $autoCancel: false }),
+        pb.collection('groups').getList(1, 1, { fields: 'id', $autoCancel: false }),
+        pb.collection('suivis').getList(1, 1, { fields: 'id', $autoCancel: false }),
+        pb.collection('suivis').getList(1, 5, { sort: '-created', expand: 'membre_id', $autoCancel: false }),
       ]);
       setStats({ members: members.totalItems, groups: groups.totalItems, suivis: suivis.totalItems });
       setRecentSuivis(recent.items);

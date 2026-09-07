@@ -57,6 +57,7 @@ export default function DonationFormScreen({ navigation }) {
         type_don: typeDon,
         statut,
         description,
+        created_by: pb.authStore.record.id,
       });
       navigation.goBack();
     } catch (err) {

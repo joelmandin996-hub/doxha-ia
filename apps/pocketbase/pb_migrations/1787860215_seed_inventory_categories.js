@@ -2,9 +2,12 @@
 migrate((app) => {
   const collection = app.findCollectionByNameOrId("inventory_categories");
 
-  const ownerLookup = app.findFirstRecordByFilter("users", "id != ''");
-  if (!ownerLookup) {
-    throw new Error("No user found to own seeded inventory categories");
+  let ownerLookup;
+  try {
+    ownerLookup = app.findFirstRecordByFilter("users", "id != ''");
+  } catch (e) {
+    console.log("No user found yet, skipping inventory_categories seed (fresh install)");
+    return;
   }
 
   const categories = [

@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { isTokenExpired } from 'pocketbase';
-import pb, { AUTH_STORAGE_KEY } from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
@@ -13,6 +11,15 @@ export const useAuth = () => {
   return context;
 };
 
+function toUser(session) {
+  if (!session?.user) return null;
+  return {
+    id: session.user.id,
+    email: session.user.email,
+    name: session.user.user_metadata?.name || null,
+  };
+}
+
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -20,46 +27,35 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let active = true;
 
-    // pb.authStore (AsyncAuthStore) hydrates from AsyncStorage on its own
-    // internal queue, whose timing relative to this effect isn't
-    // guaranteed. Reading the same key directly here — rather than trusting
-    // authStore.isValid at an arbitrary point — is what lets the splash
-    // screen stay up until the *real* logged-in state is known, instead of
-    // flashing the login screen for a returning user.
-    (async () => {
-      try {
-        const raw = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
-        if (raw && active) {
-          const parsed = JSON.parse(raw);
-          if (parsed?.token && !isTokenExpired(parsed.token)) {
-            setCurrentUser(parsed.record || null);
-          }
-        }
-      } catch (err) {
-        // Corrupt or missing storage just means "not logged in".
-      } finally {
-        if (active) setInitialLoading(false);
-      }
-    })();
+    // getSession() resolves only once the AsyncStorage-backed session has
+    // actually been read, so the splash screen stays up until the real
+    // logged-in state is known instead of flashing the login screen for a
+    // returning user.
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      setCurrentUser(toUser(data.session));
+      setInitialLoading(false);
+    });
 
-    const unsubscribe = pb.authStore.onChange(() => {
-      if (active) setCurrentUser(pb.authStore.isValid ? pb.authStore.record : null);
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (active) setCurrentUser(toUser(session));
     });
 
     return () => {
       active = false;
-      unsubscribe();
+      listener.subscription.unsubscribe();
     };
   }, []);
 
   const login = async (email, password) => {
-    const authData = await pb.collection('users').authWithPassword(email, password);
-    setCurrentUser(authData.record);
-    return authData;
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    setCurrentUser(toUser(data.session));
+    return data;
   };
 
-  const logout = () => {
-    pb.authStore.clear();
+  const logout = async () => {
+    await supabase.auth.signOut();
     setCurrentUser(null);
   };
 

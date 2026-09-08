@@ -9,7 +9,8 @@ import DateField from '../components/DateField';
 import HeaderButton from '../components/HeaderButton';
 import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS } from '../lib/constants';
 import { colors } from '../theme/colors';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import { autoInset } from '../lib/scrollProps';
 
 const CATEGORY_OPTIONS = [
@@ -31,6 +32,7 @@ const CATEGORY_OPTIONS = [
 const STATUS_OPTIONS = Object.keys(EVENT_STATUS_COLORS);
 
 export default function EventFormScreen({ route, navigation }) {
+  const { currentUser } = useAuth();
   const id = route.params?.id;
   const [form, setForm] = useState({
     titre: '',
@@ -67,13 +69,13 @@ export default function EventFormScreen({ route, navigation }) {
     try {
       const payload = {
         ...form,
+        responsable: form.responsable || null,
         capacite_max: form.capacite_max ? Number(form.capacite_max) : 0,
       };
-      if (id) {
-        await pb.collection('evenements').update(id, payload);
-      } else {
-        await pb.collection('evenements').create({ ...payload, created_by: pb.authStore.record.id });
-      }
+      const { error } = id
+        ? await supabase.from('evenements').update(payload).eq('id', id)
+        : await supabase.from('evenements').insert({ ...payload, created_by: currentUser.id });
+      if (error) throw error;
       navigation.goBack();
     } catch (err) {
       Alert.alert('Erreur', "L'enregistrement a échoué.");
@@ -101,19 +103,24 @@ export default function EventFormScreen({ route, navigation }) {
     if (!id) return;
     (async () => {
       try {
-        const record = await pb.collection('evenements').getOne(id, { expand: 'responsable' });
+        const { data: record, error } = await supabase
+          .from('evenements')
+          .select('*, responsable(id, name)')
+          .eq('id', id)
+          .single();
+        if (error) throw error;
         setForm({
           titre: record.titre || '',
           description: record.description || '',
           categorie: record.categorie || CATEGORY_OPTIONS[0],
           lieu: record.lieu || '',
-          responsable: record.responsable || '',
+          responsable: record.responsable?.id || '',
           date_debut: record.date_debut || new Date().toISOString(),
           date_fin: record.date_fin || new Date().toISOString(),
           statut: record.statut || 'a_venir',
           capacite_max: record.capacite_max ? String(record.capacite_max) : '',
         });
-        setResponsableName(record.expand?.responsable?.name || '');
+        setResponsableName(record.responsable?.name || '');
       } catch (err) {
         Alert.alert('Erreur', "Impossible de charger cet événement.");
       } finally {

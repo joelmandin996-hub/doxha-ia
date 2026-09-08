@@ -19,7 +19,7 @@ import { formatDate } from '../lib/format';
 import { useCollection } from '../lib/useCollection';
 import { autoInset } from '../lib/scrollProps';
 import { usePeekMenu } from '../contexts/PeekMenuContext';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
 
 const FILTER_OPTIONS = ['Tous', ...SUIVI_STATUSES];
 
@@ -29,7 +29,7 @@ function SuiviRowContent({ item }) {
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardName} numberOfLines={1}>
-          {item.expand?.membre_id?.name || item.description || 'Sans nom'}
+          {item.membre_id?.name || item.description || 'Sans nom'}
         </Text>
         <Badge label={item.statut} color={color} />
       </View>
@@ -75,7 +75,7 @@ function SuiviKanbanCard({ item, onPress, onMove }) {
   return (
     <PressableScale style={styles.kanbanCard} onPress={onPress}>
       <Text style={styles.kanbanName} numberOfLines={1}>
-        {item.expand?.membre_id?.name || item.description || 'Sans nom'}
+        {item.membre_id?.name || item.description || 'Sans nom'}
       </Text>
       <Text style={styles.kanbanMeta} numberOfLines={1}>
         {item.type || 'Suivi'}
@@ -106,7 +106,7 @@ export default function SuivisListScreen({ navigation }) {
   const [viewMode, setViewMode] = useState('list');
   const { items, loading, refreshing, refresh, reload } = useCollection('suivis', {
     sort: '-created',
-    expand: 'membre_id',
+    select: '*, membre_id(name)',
   });
 
   useLayoutEffect(() => {
@@ -132,7 +132,7 @@ export default function SuivisListScreen({ navigation }) {
     const q = search.trim().toLowerCase();
     return items.filter((item) => {
       const matchesStatus = statusFilter === 'Tous' || item.statut === statusFilter;
-      const name = item.expand?.membre_id?.name || item.description || '';
+      const name = item.membre_id?.name || item.description || '';
       const matchesSearch = !q || name.toLowerCase().includes(q);
       return matchesStatus && matchesSearch;
     });
@@ -142,20 +142,21 @@ export default function SuivisListScreen({ navigation }) {
     const q = search.trim().toLowerCase();
     if (!q) return items;
     return items.filter((item) => {
-      const name = item.expand?.membre_id?.name || item.description || '';
+      const name = item.membre_id?.name || item.description || '';
       return name.toLowerCase().includes(q);
     });
   }, [items, search]);
 
   const confirmDelete = (suivi) => {
-    Alert.alert('Supprimer ce suivi ?', suivi.expand?.membre_id?.name || suivi.description, [
+    Alert.alert('Supprimer ce suivi ?', suivi.membre_id?.name || suivi.description, [
       { text: 'Annuler', style: 'cancel' },
       {
         text: 'Supprimer',
         style: 'destructive',
         onPress: async () => {
           try {
-            await pb.collection('suivis').delete(suivi.id);
+            const { error } = await supabase.from('suivis').delete().eq('id', suivi.id);
+            if (error) throw error;
             reload();
           } catch (err) {
             Alert.alert('Erreur', 'La suppression a échoué.');
@@ -168,7 +169,8 @@ export default function SuivisListScreen({ navigation }) {
   const moveStatus = async (suivi, statut) => {
     Haptics.selectionAsync();
     try {
-      await pb.collection('suivis').update(suivi.id, { statut });
+      const { error } = await supabase.from('suivis').update({ statut }).eq('id', suivi.id);
+      if (error) throw error;
       reload();
     } catch (err) {
       Alert.alert('Erreur', 'La mise à jour du statut a échoué.');

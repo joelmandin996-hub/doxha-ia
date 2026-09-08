@@ -7,7 +7,7 @@ import ChipSelect from '../components/ChipSelect';
 import HeaderButton from '../components/HeaderButton';
 import { colors } from '../theme/colors';
 import { MEMBER_STATUS_COLORS } from '../lib/constants';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
 import { autoInset } from '../lib/scrollProps';
 
 const STATUS_OPTIONS = Object.keys(MEMBER_STATUS_COLORS);
@@ -25,11 +25,10 @@ export default function MemberFormScreen({ route, navigation }) {
     }
     setSaving(true);
     try {
-      if (id) {
-        await pb.collection('members').update(id, form);
-      } else {
-        await pb.collection('members').create(form);
-      }
+      const { error } = id
+        ? await supabase.from('members').update(form).eq('id', id)
+        : await supabase.from('members').insert(form);
+      if (error) throw error;
       navigation.goBack();
     } catch (err) {
       Alert.alert('Erreur', "L'enregistrement a échoué.");
@@ -57,7 +56,8 @@ export default function MemberFormScreen({ route, navigation }) {
     if (!id) return;
     (async () => {
       try {
-        const record = await pb.collection('members').getOne(id);
+        const { data: record, error } = await supabase.from('members').select('*').eq('id', id).single();
+        if (error) throw error;
         setForm({
           name: record.name || '',
           email: record.email || '',

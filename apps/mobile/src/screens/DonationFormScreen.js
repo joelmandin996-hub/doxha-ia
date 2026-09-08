@@ -8,7 +8,8 @@ import ChipSelect from '../components/ChipSelect';
 import DateField from '../components/DateField';
 import HeaderButton from '../components/HeaderButton';
 import { colors } from '../theme/colors';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import { autoInset } from '../lib/scrollProps';
 
 const DON_TYPE_OPTIONS = ['unique', 'recurrent'];
@@ -18,6 +19,7 @@ const STATUS_LABELS = { completed: 'Complété', pending: 'En attente' };
 const STATUS_COLORS = { completed: colors.success, pending: colors.warning };
 
 export default function DonationFormScreen({ navigation }) {
+  const { currentUser } = useAuth();
   const [member, setMember] = useState(null);
   const [amount, setAmount] = useState('');
   const [dateDon, setDateDon] = useState(new Date().toISOString());
@@ -41,25 +43,16 @@ export default function DonationFormScreen({ navigation }) {
     }
     setSaving(true);
     try {
-      // The `donations` collection carries both a legacy English field set
-      // (member_id/donor_name/amount/donation_type/donation_date, all
-      // required) and the newer French one actually shown in the UI
-      // (membre_id/date_don/type_don/statut) — both must be filled to pass
-      // PocketBase's required-field validation.
-      await pb.collection('donations').create({
-        member_id: member.id,
-        donor_name: member.name,
-        amount: Number(amount),
-        donation_type: 'offering',
-        donation_date: dateDon,
-        notes: description,
+      const { error } = await supabase.from('donations').insert({
         membre_id: member.id,
+        amount: Number(amount),
         date_don: dateDon,
         type_don: typeDon,
         statut,
         description,
-        created_by: pb.authStore.record.id,
+        created_by: currentUser.id,
       });
+      if (error) throw error;
       navigation.goBack();
     } catch (err) {
       Alert.alert('Erreur', "L'enregistrement a échoué.");

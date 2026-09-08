@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 import Screen from '../components/Screen';
 import GroupedSection from '../components/GroupedSection';
 import Row from '../components/Row';
-import { POCKETBASE_URL } from '../lib/pocketbase';
+import { SUPABASE_URL } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { autoInset } from '../lib/scrollProps';
 
@@ -19,7 +19,7 @@ export default function SettingsScreen() {
         </GroupedSection>
 
         <GroupedSection title="À propos">
-          <Row label="Serveur" value={POCKETBASE_URL} />
+          <Row label="Serveur" value={SUPABASE_URL} />
           <Row label="Langue" value="Français" />
         </GroupedSection>
       </ScrollView>

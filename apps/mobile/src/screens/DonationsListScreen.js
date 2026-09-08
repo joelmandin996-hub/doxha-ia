@@ -18,7 +18,7 @@ const STATUS_COLORS = { completed: colors.success, pending: colors.warning };
 export default function DonationsListScreen({ navigation }) {
   const { items, loading, refreshing, refresh, reload } = useCollection('donations', {
     sort: '-date_don',
-    expand: 'membre_id',
+    select: '*, membre_id(name)',
   });
 
   useLayoutEffect(() => {
@@ -60,7 +60,7 @@ export default function DonationsListScreen({ navigation }) {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Text style={styles.cardName} numberOfLines={1}>
-                {item.expand?.membre_id?.name || item.donor_name || 'Anonyme'}
+                {item.membre_id?.name || 'Anonyme'}
               </Text>
               <Text style={styles.cardAmount}>{formatAmount(item.amount)}</Text>
             </View>

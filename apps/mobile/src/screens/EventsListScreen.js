@@ -13,7 +13,7 @@ import { formatDate } from '../lib/format';
 import { useCollection } from '../lib/useCollection';
 import { autoInset } from '../lib/scrollProps';
 import { usePeekMenu } from '../contexts/PeekMenuContext';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
 
 function EventRowContent({ item }) {
   const color = EVENT_STATUS_COLORS[item.statut] || colors.module.events;
@@ -89,7 +89,8 @@ export default function EventsListScreen({ navigation }) {
         style: 'destructive',
         onPress: async () => {
           try {
-            await pb.collection('evenements').delete(event.id);
+            const { error } = await supabase.from('evenements').delete().eq('id', event.id);
+            if (error) throw error;
             reload();
           } catch (err) {
             Alert.alert('Erreur', 'La suppression a échoué.');

@@ -8,7 +8,7 @@ import ChipSelect from '../components/ChipSelect';
 import HeaderButton from '../components/HeaderButton';
 import { colors } from '../theme/colors';
 import { GROUP_TYPE_COLORS } from '../lib/constants';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
 import { autoInset } from '../lib/scrollProps';
 
 const TYPE_OPTIONS = Object.keys(GROUP_TYPE_COLORS);
@@ -29,11 +29,11 @@ export default function GroupFormScreen({ route, navigation }) {
     }
     setSaving(true);
     try {
-      if (id) {
-        await pb.collection('groups').update(id, form);
-      } else {
-        await pb.collection('groups').create(form);
-      }
+      const payload = { ...form, responsible: form.responsible || null };
+      const { error } = id
+        ? await supabase.from('groups').update(payload).eq('id', id)
+        : await supabase.from('groups').insert(payload);
+      if (error) throw error;
       navigation.goBack();
     } catch (err) {
       Alert.alert('Erreur', "L'enregistrement a échoué.");
@@ -61,14 +61,19 @@ export default function GroupFormScreen({ route, navigation }) {
     if (!id) return;
     (async () => {
       try {
-        const record = await pb.collection('groups').getOne(id, { expand: 'responsible' });
+        const { data: record, error } = await supabase
+          .from('groups')
+          .select('*, responsible(id, name)')
+          .eq('id', id)
+          .single();
+        if (error) throw error;
         setForm({
           name: record.name || '',
           description: record.description || '',
           type: record.type || 'Cellule',
-          responsible: record.responsible || '',
+          responsible: record.responsible?.id || '',
         });
-        setResponsibleName(record.expand?.responsible?.name || '');
+        setResponsibleName(record.responsible?.name || '');
       } catch (err) {
         Alert.alert('Erreur', 'Impossible de charger ce groupe.');
       } finally {

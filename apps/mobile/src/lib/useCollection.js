@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import pb from './pocketbase';
+import { supabase } from './supabase';
 
 // Shared list-fetching behaviour for the Members/Groups/Events/Suivis/Donations
 // screens: load once, expose pull-to-refresh, surface loading/error state.
-export function useCollection(collectionName, { filter, sort, expand, perPage = 200 } = {}) {
+// `sort` keeps the PocketBase-style "-column" (descending) / "column"
+// (ascending) string so call sites didn't need to change; `select` is
+// passed straight through to Supabase (default '*', or e.g.
+// '*, membre_id(name)' to embed a related row).
+export function useCollection(table, { select = '*', sort, perPage = 200 } = {}) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -14,19 +18,22 @@ export function useCollection(collectionName, { filter, sort, expand, perPage = 
       isRefresh ? setRefreshing(true) : setLoading(true);
       setError(null);
       try {
-        const result = await pb.collection(collectionName).getList(1, perPage, {
-          filter,
-          sort,
-          expand,
-        });
-        setItems(result.items);
+        let query = supabase.from(table).select(select).limit(perPage);
+        if (sort) {
+          const ascending = !sort.startsWith('-');
+          const column = ascending ? sort : sort.slice(1);
+          query = query.order(column, { ascending });
+        }
+        const { data, error: queryError } = await query;
+        if (queryError) throw queryError;
+        setItems(data || []);
       } catch (err) {
-        if (!err?.isAbort) setError(err);
+        setError(err);
       } finally {
         isRefresh ? setRefreshing(false) : setLoading(false);
       }
     },
-    [collectionName, filter, sort, expand, perPage]
+    [table, select, sort, perPage]
   );
 
   useEffect(() => {

@@ -9,7 +9,7 @@ import HeaderButton from '../components/HeaderButton';
 import { colors } from '../theme/colors';
 import { formatDate } from '../lib/format';
 import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS } from '../lib/constants';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
 import { autoInset } from '../lib/scrollProps';
 
 export default function EventDetailScreen({ route, navigation }) {
@@ -20,7 +20,12 @@ export default function EventDetailScreen({ route, navigation }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const record = await pb.collection('evenements').getOne(id, { expand: 'responsable' });
+      const { data: record, error } = await supabase
+        .from('evenements')
+        .select('*, responsable(name)')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
       setEvent(record);
     } catch (err) {
       Alert.alert('Erreur', "Impossible de charger cet événement.");
@@ -51,7 +56,8 @@ export default function EventDetailScreen({ route, navigation }) {
         style: 'destructive',
         onPress: async () => {
           try {
-            await pb.collection('evenements').delete(id);
+            const { error } = await supabase.from('evenements').delete().eq('id', id);
+            if (error) throw error;
             navigation.goBack();
           } catch (err) {
             Alert.alert('Erreur', 'La suppression a échoué.');
@@ -80,7 +86,7 @@ export default function EventDetailScreen({ route, navigation }) {
           <Row icon="calendar-outline" iconColor={colors.amber} label="Début" value={formatDate(event.date_debut, "d MMM yyyy 'à' HH:mm")} />
           <Row icon="calendar-outline" iconColor={colors.amber} label="Fin" value={formatDate(event.date_fin, "d MMM yyyy 'à' HH:mm")} />
           <Row icon="location-outline" iconColor={colors.coral} label="Lieu" value={event.lieu} placeholder="—" />
-          <Row icon="person-outline" iconColor={colors.primary} label="Responsable" value={event.expand?.responsable?.name} placeholder="Aucun" />
+          <Row icon="person-outline" iconColor={colors.primary} label="Responsable" value={event.responsable?.name} placeholder="Aucun" />
           {event.capacite_max ? (
             <Row icon="people-outline" iconColor={colors.sky} label="Capacité max" value={String(event.capacite_max)} />
           ) : null}

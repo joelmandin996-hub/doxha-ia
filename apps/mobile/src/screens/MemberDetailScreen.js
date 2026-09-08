@@ -10,7 +10,7 @@ import HeaderButton from '../components/HeaderButton';
 import { colors } from '../theme/colors';
 import { formatDate } from '../lib/format';
 import { MEMBER_STATUS_COLORS } from '../lib/constants';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
 import { autoInset } from '../lib/scrollProps';
 
 export default function MemberDetailScreen({ route, navigation }) {
@@ -21,8 +21,9 @@ export default function MemberDetailScreen({ route, navigation }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const record = await pb.collection('members').getOne(id);
-      setMember(record);
+      const { data, error } = await supabase.from('members').select('*').eq('id', id).single();
+      if (error) throw error;
+      setMember(data);
     } catch (err) {
       Alert.alert('Erreur', "Impossible de charger ce membre.");
     } finally {
@@ -52,7 +53,8 @@ export default function MemberDetailScreen({ route, navigation }) {
         style: 'destructive',
         onPress: async () => {
           try {
-            await pb.collection('members').delete(id);
+            const { error } = await supabase.from('members').delete().eq('id', id);
+            if (error) throw error;
             navigation.goBack();
           } catch (err) {
             Alert.alert('Erreur', 'La suppression a échoué.');

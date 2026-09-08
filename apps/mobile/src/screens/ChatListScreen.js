@@ -10,7 +10,7 @@ import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { formatDate } from '../lib/format';
 import { autoInset } from '../lib/scrollProps';
 import { useAuth } from '../contexts/AuthContext';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
 
 export default function ChatListScreen({ navigation }) {
   const { currentUser } = useAuth();
@@ -23,29 +23,30 @@ export default function ChatListScreen({ navigation }) {
     async ({ silent } = {}) => {
       if (!silent) setLoading(true);
       try {
-        const users = await pb.collection('users').getList(1, 200, { sort: 'name', $autoCancel: false });
-        const others = users.items.filter((u) => u.id !== currentUser.id);
-        setTeammates(others);
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('name');
+        if (profilesError) throw profilesError;
+        setTeammates((profiles || []).filter((u) => u.id !== currentUser.id));
 
-        const conversations = await pb.collection('conversations').getList(1, 200, {
-          filter: `user_a="${currentUser.id}" || user_b="${currentUser.id}"`,
-          $autoCancel: false,
-        });
+        const { data: conversations, error: convError } = await supabase
+          .from('conversations')
+          .select('*')
+          .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`);
+        if (convError) throw convError;
 
         const entries = await Promise.all(
-          conversations.items.map(async (conv) => {
+          (conversations || []).map(async (conv) => {
             const otherId = conv.user_a === currentUser.id ? conv.user_b : conv.user_a;
-            try {
-              const last = await pb.collection('chat_messages').getList(1, 1, {
-                filter: `conversation="${conv.id}"`,
-                sort: '-created',
-                $autoCancel: false,
-              });
-              const message = last.items[0];
-              return [otherId, { conversationId: conv.id, text: message?.text, created: message?.created }];
-            } catch {
-              return [otherId, { conversationId: conv.id }];
-            }
+            const { data: last } = await supabase
+              .from('chat_messages')
+              .select('text, created')
+              .eq('conversation', conv.id)
+              .order('created', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            return [otherId, { conversationId: conv.id, text: last?.text, created: last?.created }];
           })
         );
         setPreviews(Object.fromEntries(entries));
@@ -83,15 +84,24 @@ export default function ChatListScreen({ navigation }) {
       navigation.navigate('ChatThread', { conversationId: existingId, otherUser: user });
       return;
     }
-    try {
-      const conv = await pb
-        .collection('conversations')
-        .getFirstListItem(`(user_a="${currentUser.id}" && user_b="${user.id}") || (user_a="${user.id}" && user_b="${currentUser.id}")`);
-      navigation.navigate('ChatThread', { conversationId: conv.id, otherUser: user });
-    } catch {
-      const conv = await pb.collection('conversations').create({ user_a: currentUser.id, user_b: user.id });
-      navigation.navigate('ChatThread', { conversationId: conv.id, otherUser: user });
+    const { data: existing } = await supabase
+      .from('conversations')
+      .select('id')
+      .or(
+        `and(user_a.eq.${currentUser.id},user_b.eq.${user.id}),and(user_a.eq.${user.id},user_b.eq.${currentUser.id})`
+      )
+      .maybeSingle();
+    if (existing) {
+      navigation.navigate('ChatThread', { conversationId: existing.id, otherUser: user });
+      return;
     }
+    const { data: conv, error } = await supabase
+      .from('conversations')
+      .insert({ user_a: currentUser.id, user_b: user.id })
+      .select('id')
+      .single();
+    if (error) return;
+    navigation.navigate('ChatThread', { conversationId: conv.id, otherUser: user });
   };
 
   return (

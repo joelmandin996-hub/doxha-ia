@@ -14,7 +14,7 @@ import { MEMBER_STATUS_COLORS } from '../lib/constants';
 import { useCollection } from '../lib/useCollection';
 import { autoInset } from '../lib/scrollProps';
 import { usePeekMenu } from '../contexts/PeekMenuContext';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
 
 function MemberRowContent({ item }) {
   return (
@@ -97,7 +97,8 @@ export default function MembersListScreen({ navigation }) {
         style: 'destructive',
         onPress: async () => {
           try {
-            await pb.collection('members').delete(member.id);
+            const { error } = await supabase.from('members').delete().eq('id', member.id);
+            if (error) throw error;
             reload();
           } catch (err) {
             Alert.alert('Erreur', 'La suppression a échoué.');

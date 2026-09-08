@@ -13,7 +13,7 @@ import { GROUP_TYPE_COLORS } from '../lib/constants';
 import { useCollection } from '../lib/useCollection';
 import { autoInset } from '../lib/scrollProps';
 import { usePeekMenu } from '../contexts/PeekMenuContext';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
 
 function GroupRowContent({ item }) {
   const color = GROUP_TYPE_COLORS[item.type] || colors.secondary;
@@ -27,7 +27,7 @@ function GroupRowContent({ item }) {
           {item.name}
         </Text>
         <Text style={styles.cardMeta} numberOfLines={1}>
-          {item.expand?.responsible?.name ? `Responsable : ${item.expand.responsible.name}` : 'Sans responsable'}
+          {item.responsible?.name ? `Responsable : ${item.responsible.name}` : 'Sans responsable'}
         </Text>
       </View>
       {item.type ? <Badge label={item.type} color={color} /> : null}
@@ -65,7 +65,7 @@ function GroupRow({ item, index, onPress, onEdit, onDelete }) {
 export default function GroupsListScreen({ navigation }) {
   const { items, loading, refreshing, refresh, reload } = useCollection('groups', {
     sort: 'name',
-    expand: 'responsible',
+    select: '*, responsible(name)',
   });
 
   useLayoutEffect(() => {
@@ -89,7 +89,8 @@ export default function GroupsListScreen({ navigation }) {
         style: 'destructive',
         onPress: async () => {
           try {
-            await pb.collection('groups').delete(group.id);
+            const { error } = await supabase.from('groups').delete().eq('id', group.id);
+            if (error) throw error;
             reload();
           } catch (err) {
             Alert.alert('Erreur', 'La suppression a échoué.');

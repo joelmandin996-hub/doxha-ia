@@ -8,7 +8,8 @@ import ChipSelect from '../components/ChipSelect';
 import HeaderButton from '../components/HeaderButton';
 import { colors } from '../theme/colors';
 import { SUIVI_PRIORITY_COLORS, SUIVI_STATUS_COLORS, SUIVI_STATUSES } from '../lib/constants';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import { autoInset } from '../lib/scrollProps';
 
 const TYPE_OPTIONS = [
@@ -30,6 +31,7 @@ const TYPE_OPTIONS = [
 const PRIORITY_OPTIONS = Object.keys(SUIVI_PRIORITY_COLORS);
 
 export default function SuiviFormScreen({ route, navigation }) {
+  const { currentUser } = useAuth();
   const id = route.params?.id;
   const [form, setForm] = useState({
     membre_id: '',
@@ -61,11 +63,11 @@ export default function SuiviFormScreen({ route, navigation }) {
     }
     setSaving(true);
     try {
-      if (id) {
-        await pb.collection('suivis').update(id, form);
-      } else {
-        await pb.collection('suivis').create({ ...form, created_by: pb.authStore.record.id });
-      }
+      const payload = { ...form, membre_id: form.membre_id || null };
+      const { error } = id
+        ? await supabase.from('suivis').update(payload).eq('id', id)
+        : await supabase.from('suivis').insert({ ...payload, created_by: currentUser.id });
+      if (error) throw error;
       navigation.goBack();
     } catch (err) {
       Alert.alert('Erreur', "L'enregistrement a échoué.");
@@ -93,16 +95,21 @@ export default function SuiviFormScreen({ route, navigation }) {
     if (!id) return;
     (async () => {
       try {
-        const record = await pb.collection('suivis').getOne(id, { expand: 'membre_id' });
+        const { data: record, error } = await supabase
+          .from('suivis')
+          .select('*, membre_id(id, name)')
+          .eq('id', id)
+          .single();
+        if (error) throw error;
         setForm({
-          membre_id: record.membre_id || '',
+          membre_id: record.membre_id?.id || '',
           description: record.description || '',
           type: record.type || TYPE_OPTIONS[0],
           statut: record.statut || SUIVI_STATUSES[0],
           priorite: record.priorite || 'normal',
           notes: record.notes || '',
         });
-        setMemberName(record.expand?.membre_id?.name || '');
+        setMemberName(record.membre_id?.name || '');
       } catch (err) {
         Alert.alert('Erreur', 'Impossible de charger ce suivi.');
       } finally {

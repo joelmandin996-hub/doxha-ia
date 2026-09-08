@@ -11,7 +11,7 @@ import HeaderButton from '../components/HeaderButton';
 import EmptyState from '../components/EmptyState';
 import { colors, continuousCorner, radius } from '../theme/colors';
 import { GROUP_TYPE_COLORS } from '../lib/constants';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
 import { autoInset } from '../lib/scrollProps';
 
 export default function GroupDetailScreen({ route, navigation }) {
@@ -23,13 +23,19 @@ export default function GroupDetailScreen({ route, navigation }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const record = await pb.collection('groups').getOne(id, { expand: 'responsible' });
+      const { data: record, error } = await supabase
+        .from('groups')
+        .select('*, responsible(name)')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
       setGroup(record);
-      const links = await pb.collection('group_members').getFullList({
-        filter: `group_id = "${id}"`,
-        expand: 'member_id',
-      });
-      setMembers(links.map((link) => link.expand?.member_id).filter(Boolean));
+      const { data: links, error: linksError } = await supabase
+        .from('group_members')
+        .select('member_id(id, name)')
+        .eq('group_id', id);
+      if (linksError) throw linksError;
+      setMembers(links.map((link) => link.member_id).filter(Boolean));
     } catch (err) {
       Alert.alert('Erreur', 'Impossible de charger ce groupe.');
     } finally {
@@ -59,7 +65,8 @@ export default function GroupDetailScreen({ route, navigation }) {
         style: 'destructive',
         onPress: async () => {
           try {
-            await pb.collection('groups').delete(id);
+            const { error } = await supabase.from('groups').delete().eq('id', id);
+            if (error) throw error;
             navigation.goBack();
           } catch (err) {
             Alert.alert('Erreur', 'La suppression a échoué.');
@@ -85,7 +92,7 @@ export default function GroupDetailScreen({ route, navigation }) {
         </View>
 
         <GroupedSection>
-          <Row icon="person-outline" iconColor={colors.primary} label="Responsable" value={group.expand?.responsible?.name} placeholder="Aucun" />
+          <Row icon="person-outline" iconColor={colors.primary} label="Responsable" value={group.responsible?.name} placeholder="Aucun" />
         </GroupedSection>
 
         {group.description ? (

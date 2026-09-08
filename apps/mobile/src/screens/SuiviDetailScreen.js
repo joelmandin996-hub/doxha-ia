@@ -10,7 +10,7 @@ import HeaderButton from '../components/HeaderButton';
 import { colors } from '../theme/colors';
 import { formatDate } from '../lib/format';
 import { SUIVI_PRIORITY_COLORS, SUIVI_STATUSES, SUIVI_STATUS_COLORS } from '../lib/constants';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
 import { autoInset } from '../lib/scrollProps';
 
 export default function SuiviDetailScreen({ route, navigation }) {
@@ -22,7 +22,12 @@ export default function SuiviDetailScreen({ route, navigation }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const record = await pb.collection('suivis').getOne(id, { expand: 'membre_id' });
+      const { data: record, error } = await supabase
+        .from('suivis')
+        .select('*, membre_id(name)')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
       setSuivi(record);
     } catch (err) {
       Alert.alert('Erreur', 'Impossible de charger ce suivi.');
@@ -48,8 +53,9 @@ export default function SuiviDetailScreen({ route, navigation }) {
   const handleStatusChange = async (statut) => {
     setUpdatingStatus(true);
     try {
-      const record = await pb.collection('suivis').update(id, { statut });
-      setSuivi((prev) => ({ ...prev, statut: record.statut }));
+      const { error } = await supabase.from('suivis').update({ statut }).eq('id', id);
+      if (error) throw error;
+      setSuivi((prev) => ({ ...prev, statut }));
     } catch (err) {
       Alert.alert('Erreur', 'La mise à jour du statut a échoué.');
     } finally {
@@ -65,7 +71,8 @@ export default function SuiviDetailScreen({ route, navigation }) {
         style: 'destructive',
         onPress: async () => {
           try {
-            await pb.collection('suivis').delete(id);
+            const { error } = await supabase.from('suivis').delete().eq('id', id);
+            if (error) throw error;
             navigation.goBack();
           } catch (err) {
             Alert.alert('Erreur', 'La suppression a échoué.');
@@ -81,7 +88,7 @@ export default function SuiviDetailScreen({ route, navigation }) {
     <Screen edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll} {...autoInset}>
         <View style={styles.hero}>
-          <Text style={styles.name}>{suivi.expand?.membre_id?.name || suivi.description || 'Sans nom'}</Text>
+          <Text style={styles.name}>{suivi.membre_id?.name || suivi.description || 'Sans nom'}</Text>
           <View style={styles.badgeRow}>
             <Badge label={suivi.type || 'Suivi'} color={colors.module.followups} />
             {suivi.priorite ? (
@@ -93,12 +100,6 @@ export default function SuiviDetailScreen({ route, navigation }) {
         <GroupedSection title="Statut" footer={updatingStatus ? 'Mise à jour...' : undefined}>
           <ChipSelect options={SUIVI_STATUSES} value={suivi.statut} onChange={handleStatusChange} colorFor={(option) => SUIVI_STATUS_COLORS[option]} inset />
         </GroupedSection>
-
-        {suivi.sous_rubrique ? (
-          <GroupedSection>
-            <Row label="Sous-rubrique" value={suivi.sous_rubrique} />
-          </GroupedSection>
-        ) : null}
 
         {suivi.notes ? (
           <GroupedSection title="Notes">

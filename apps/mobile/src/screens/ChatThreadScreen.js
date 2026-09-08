@@ -9,7 +9,7 @@ import { colors, continuousCorner, radius } from '../theme/colors';
 import { formatDate } from '../lib/format';
 import { useAuth } from '../contexts/AuthContext';
 import { defaultTabBarStyle } from '../navigation/MainTabs';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
 
 function Bubble({ message, mine }) {
   return (
@@ -45,11 +45,13 @@ export default function ChatThreadScreen({ route, navigation }) {
 
   const load = useCallback(async () => {
     try {
-      const res = await pb.collection('chat_messages').getList(1, 200, {
-        filter: `conversation="${conversationId}"`,
-        sort: 'created',
-      });
-      setMessages(res.items);
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('conversation', conversationId)
+        .order('created');
+      if (error) throw error;
+      setMessages(data || []);
     } catch (err) {
       Alert.alert('Erreur', 'Impossible de charger la conversation.');
     }
@@ -62,23 +64,20 @@ export default function ChatThreadScreen({ route, navigation }) {
   );
 
   useEffect(() => {
-    let unsubscribe;
-    let cancelled = false;
-    pb.collection('chat_messages')
-      .subscribe('*', (event) => {
-        if (event.record.conversation !== conversationId) return;
-        if (event.action === 'create') {
+    const channel = supabase
+      .channel(`chat_messages:${conversationId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `conversation=eq.${conversationId}` },
+        (payload) => {
           Haptics.selectionAsync();
-          setMessages((prev) => (prev.some((m) => m.id === event.record.id) ? prev : [...prev, event.record]));
+          setMessages((prev) => (prev.some((m) => m.id === payload.new.id) ? prev : [...prev, payload.new]));
         }
-      })
-      .then((fn) => {
-        if (cancelled) fn();
-        else unsubscribe = fn;
-      });
+      )
+      .subscribe();
+
     return () => {
-      cancelled = true;
-      if (unsubscribe) unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [conversationId]);
 
@@ -88,11 +87,10 @@ export default function ChatThreadScreen({ route, navigation }) {
     setText('');
     setSending(true);
     try {
-      await pb.collection('chat_messages').create({
-        conversation: conversationId,
-        sender: currentUser.id,
-        text: value,
-      });
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert({ conversation: conversationId, sender: currentUser.id, text: value });
+      if (error) throw error;
     } catch (err) {
       Alert.alert('Erreur', "L'envoi a échoué.");
       setText(value);

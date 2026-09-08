@@ -12,7 +12,7 @@ import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { formatDate } from '../lib/format';
 import { SUIVI_STATUS_COLORS } from '../lib/constants';
 import { useAuth } from '../contexts/AuthContext';
-import pb from '../lib/pocketbase';
+import { supabase } from '../lib/supabase';
 
 export default function DashboardScreen({ navigation }) {
   const { currentUser } = useAuth();
@@ -24,17 +24,14 @@ export default function DashboardScreen({ navigation }) {
   const load = useCallback(async (isRefresh = false) => {
     isRefresh ? setRefreshing(true) : setLoading(true);
     try {
-      // $autoCancel: false is required here — the SDK cancels an earlier
-      // in-flight request to the same collection when a second one starts,
-      // and the two `suivis` calls below fire in the same batch.
       const [members, groups, suivis, recent] = await Promise.all([
-        pb.collection('members').getList(1, 1, { fields: 'id', $autoCancel: false }),
-        pb.collection('groups').getList(1, 1, { fields: 'id', $autoCancel: false }),
-        pb.collection('suivis').getList(1, 1, { fields: 'id', $autoCancel: false }),
-        pb.collection('suivis').getList(1, 5, { sort: '-created', expand: 'membre_id', $autoCancel: false }),
+        supabase.from('members').select('id', { count: 'exact', head: true }),
+        supabase.from('groups').select('id', { count: 'exact', head: true }),
+        supabase.from('suivis').select('id', { count: 'exact', head: true }),
+        supabase.from('suivis').select('*, membre_id(name)').order('created', { ascending: false }).limit(5),
       ]);
-      setStats({ members: members.totalItems, groups: groups.totalItems, suivis: suivis.totalItems });
-      setRecentSuivis(recent.items);
+      setStats({ members: members.count ?? 0, groups: groups.count ?? 0, suivis: suivis.count ?? 0 });
+      setRecentSuivis(recent.data || []);
     } catch (err) {
       // Dashboard is a best-effort overview; leave stale/zero state on error.
     } finally {
@@ -92,7 +89,7 @@ export default function DashboardScreen({ navigation }) {
             <FadeInItem key={item.id} index={index} style={styles.suiviCard}>
               <View style={styles.suiviHeader}>
                 <Text style={styles.suiviName} numberOfLines={1}>
-                  {item.expand?.membre_id?.name || item.description || 'Sans nom'}
+                  {item.membre_id?.name || item.description || 'Sans nom'}
                 </Text>
                 <Badge label={item.statut} color={SUIVI_STATUS_COLORS[item.statut] || colors.primary} />
               </View>

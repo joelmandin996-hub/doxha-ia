@@ -48,13 +48,18 @@ export default function MainTabs() {
   );
 }
 
+// Exported so screens that hide the tab bar (e.g. ChatThreadScreen, via
+// navigation.getParent().setOptions({ tabBarStyle })) can restore the exact
+// same style on the way out, instead of resetting to RN's unstyled default.
+export const defaultTabBarStyle = {
+  borderTopWidth: 0.5,
+  borderTopColor: colors.separator,
+  elevation: 0,
+  backgroundColor: Platform.OS === 'ios' ? 'transparent' : colors.card,
+};
+
 const styles = StyleSheet.create({
-  tabBar: {
-    borderTopWidth: 0.5,
-    borderTopColor: colors.separator,
-    elevation: 0,
-    backgroundColor: Platform.OS === 'ios' ? 'transparent' : colors.card,
-  },
+  tabBar: defaultTabBarStyle,
   tabBarLabel: {
     fontSize: 11,
     fontWeight: '600',

@@ -8,7 +8,7 @@ import logger from '../utils/logger.js';
 
 const router = Router();
 
-router.use(pocketbaseAuth);
+router.use(pocketbaseAuth());
 
 /**
  * Detects and extracts financial context from message.

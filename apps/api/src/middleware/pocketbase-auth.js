@@ -13,36 +13,43 @@ function forbiddenError(message) {
 	return error;
 }
 
-export async function pocketbaseAuth(req, res, next) {
-	const token = req.headers.authorization?.split(' ')?.[1];
+// `requireVerified` defaults to true for the original (email-verification-gated)
+// use case in integrated-ai.js. Routes like sms.js just need "is this a real,
+// currently-valid PocketBase session" — church staff accounts are created
+// directly by an admin and aren't expected to go through email verification,
+// so they pass `{ requireVerified: false }`.
+export function pocketbaseAuth({ requireVerified = true } = {}) {
+	return async function (req, res, next) {
+		const token = req.headers.authorization?.split(' ')?.[1];
 
-	// Auth is enforced by default. To allow public (anonymous) access, remove this
-	// middleware from the route (apps/api/src/routes/integrated-ai.js).
-	if (!token) {
-		return next(unauthorizedError('Please sign in or create an account to use the chat.'));
-	}
+		// Auth is enforced by default. To allow public (anonymous) access, remove this
+		// middleware from the route (apps/api/src/routes/integrated-ai.js).
+		if (!token) {
+			return next(unauthorizedError('Please sign in or create an account to continue.'));
+		}
 
-	try {
-		const base64Decoded = Buffer.from(token, 'base64').toString('utf-8');
-		const tokenData = JSON.parse(base64Decoded);
+		try {
+			const base64Decoded = Buffer.from(token, 'base64').toString('utf-8');
+			const tokenData = JSON.parse(base64Decoded);
 
-		if (!tokenData?.token || !tokenData?.record) {
+			if (!tokenData?.token || !tokenData?.record) {
+				return next(unauthorizedError('Your session has expired. Please sign in again.'));
+			}
+
+			// by refreshing token we verify that it was not intercepted by a malicious user
+			const pocketbaseClient = new Pocketbase('http://localhost:8090');
+			pocketbaseClient.authStore.save(tokenData.token, tokenData.record);
+			const newToken = await pocketbaseClient.collection(tokenData.record.collectionName).authRefresh();
+
+			if (requireVerified && !newToken.record.verified) {
+				return next(forbiddenError('Please verify your email to use the chat. Check your inbox for the verification link.'));
+			}
+
+			req.pocketbaseUserId = newToken.record.id;
+
+			return next();
+		} catch {
 			return next(unauthorizedError('Your session has expired. Please sign in again.'));
 		}
-
-		// by refreshing token we verify that it was not intercepted by a malicious user
-		const pocketbaseClient = new Pocketbase('http://localhost:8090');
-		pocketbaseClient.authStore.save(tokenData.token, tokenData.record);
-		const newToken = await pocketbaseClient.collection(tokenData.record.collectionName).authRefresh();
-
-		if (!newToken.record.verified) {
-			return next(forbiddenError('Please verify your email to use the chat. Check your inbox for the verification link.'));
-		}
-
-		req.pocketbaseUserId = newToken.record.id;
-
-		return next();
-	} catch {
-		return next(unauthorizedError('Your session has expired. Please sign in again.'));
-	}
+	};
 }

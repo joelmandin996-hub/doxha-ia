@@ -8,6 +8,8 @@ import DonationsListScreen from '../screens/DonationsListScreen';
 import DonationFormScreen from '../screens/DonationFormScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import MemberPickerScreen from '../screens/MemberPickerScreen';
+import ChatListScreen from '../screens/ChatListScreen';
+import ChatThreadScreen from '../screens/ChatThreadScreen';
 import { detailScreenOptions, modalFormOptions, stackScreenOptions } from './stackOptions';
 
 const Stack = createNativeStackNavigator();
@@ -23,6 +25,8 @@ export default function MoreNavigator() {
       <Stack.Screen name="DonationForm" component={DonationFormScreen} options={modalFormOptions} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ ...detailScreenOptions, title: 'Paramètres' }} />
       <Stack.Screen name="MemberPicker" component={MemberPickerScreen} options={{ ...detailScreenOptions, title: 'Choisir un membre' }} />
+      <Stack.Screen name="Messages" component={ChatListScreen} options={{ title: 'Messages' }} />
+      <Stack.Screen name="ChatThread" component={ChatThreadScreen} options={{ ...detailScreenOptions, title: 'Conversation' }} />
     </Stack.Navigator>
   );
 }

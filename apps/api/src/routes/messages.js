@@ -323,58 +323,8 @@ router.post('/send-message', async (req, res) => {
   res.json(messageRecord);
 });
 
-// Send SMS to individual phone number
-router.post('/sms/send', async (req, res) => {
-  const { phoneNumber, message } = req.body;
-
-  // Input validation
-  if (!phoneNumber || !message) {
-    return res.status(400).json({ error: 'Missing required fields: phoneNumber, message' });
-  }
-
-  if (typeof message !== 'string' || message.trim() === '') {
-    return res.status(400).json({ error: 'message must be a non-empty string' });
-  }
-
-  // Validate phoneNumber: non-empty, starts with '+', contains only digits and '+'
-  if (typeof phoneNumber !== 'string' || phoneNumber.trim() === '') {
-    return res.status(400).json({ error: 'Numéro de téléphone invalide' });
-  }
-
-  if (!phoneNumber.startsWith('+')) {
-    throw new Error('Numéro de téléphone invalide');
-  }
-
-  if (!/^\+[0-9]+$/.test(phoneNumber)) {
-    throw new Error('Numéro de téléphone invalide');
-  }
-
-  // Get Twilio credentials from environment
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const fromNumber = process.env.TWILIO_PHONE_NUMBER;
-
-  if (!accountSid || !authToken || !fromNumber) {
-    throw new Error('Twilio credentials not configured in environment variables');
-  }
-
-  // Initialize Twilio client
-  const client = twilio(accountSid, authToken);
-
-  // Send SMS via Twilio
-  const smsMessage = await client.messages.create({
-    body: message,
-    from: fromNumber,
-    to: phoneNumber,
-  });
-
-  logger.info(`SMS sent successfully. MessageId: ${smsMessage.sid}, To: ${phoneNumber}`);
-
-  res.json({
-    success: true,
-    message: 'SMS envoyé',
-    messageSid: smsMessage.sid,
-  });
-});
+// Individual SMS sending lives in sms.js (mounted at /sms, and auth-gated
+// there) — this router used to shadow it with an unauthenticated duplicate
+// at the same /sms/send path, which silently defeated that auth check.
 
 export default router;

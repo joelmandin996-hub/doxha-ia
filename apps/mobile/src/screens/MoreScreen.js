@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { autoInset } from '../lib/scrollProps';
 
 const ITEMS = [
+  { key: 'Messages', label: 'Messages', icon: 'chatbubbles-outline', color: colors.module.comm },
   { key: 'Events', label: 'Événements', icon: 'calendar-outline', color: colors.module.events },
   { key: 'Donations', label: 'Dons', icon: 'heart-outline', color: colors.module.donations },
   { key: 'Settings', label: 'Paramètres', icon: 'settings-outline', color: colors.secondaryLabel },

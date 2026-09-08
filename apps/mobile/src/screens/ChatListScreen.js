@@ -1,0 +1,166 @@
+import React, { useCallback, useMemo, useState } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import Screen from '../components/Screen';
+import Avatar from '../components/Avatar';
+import FadeInItem from '../components/FadeInItem';
+import PressableScale from '../components/PressableScale';
+import EmptyState from '../components/EmptyState';
+import { colors, continuousCorner, radius, shadow } from '../theme/colors';
+import { formatDate } from '../lib/format';
+import { autoInset } from '../lib/scrollProps';
+import { useAuth } from '../contexts/AuthContext';
+import pb from '../lib/pocketbase';
+
+export default function ChatListScreen({ navigation }) {
+  const { currentUser } = useAuth();
+  const [teammates, setTeammates] = useState([]);
+  const [previews, setPreviews] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(
+    async ({ silent } = {}) => {
+      if (!silent) setLoading(true);
+      try {
+        const users = await pb.collection('users').getList(1, 200, { sort: 'name', $autoCancel: false });
+        const others = users.items.filter((u) => u.id !== currentUser.id);
+        setTeammates(others);
+
+        const conversations = await pb.collection('conversations').getList(1, 200, {
+          filter: `user_a="${currentUser.id}" || user_b="${currentUser.id}"`,
+          $autoCancel: false,
+        });
+
+        const entries = await Promise.all(
+          conversations.items.map(async (conv) => {
+            const otherId = conv.user_a === currentUser.id ? conv.user_b : conv.user_a;
+            try {
+              const last = await pb.collection('chat_messages').getList(1, 1, {
+                filter: `conversation="${conv.id}"`,
+                sort: '-created',
+                $autoCancel: false,
+              });
+              const message = last.items[0];
+              return [otherId, { conversationId: conv.id, text: message?.text, created: message?.created }];
+            } catch {
+              return [otherId, { conversationId: conv.id }];
+            }
+          })
+        );
+        setPreviews(Object.fromEntries(entries));
+      } catch (err) {
+        // Chat is a bonus feature — a load failure shouldn't block the rest of the app.
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [currentUser.id]
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      load({ silent: true });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+  );
+
+  const sorted = useMemo(() => {
+    return [...teammates].sort((a, b) => {
+      const pa = previews[a.id]?.created;
+      const pbCreated = previews[b.id]?.created;
+      if (pa && pbCreated) return pbCreated.localeCompare(pa);
+      if (pa && !pbCreated) return -1;
+      if (!pa && pbCreated) return 1;
+      return (a.name || a.email).localeCompare(b.name || b.email);
+    });
+  }, [teammates, previews]);
+
+  const openThread = async (user) => {
+    const existingId = previews[user.id]?.conversationId;
+    if (existingId) {
+      navigation.navigate('ChatThread', { conversationId: existingId, otherUser: user });
+      return;
+    }
+    try {
+      const conv = await pb
+        .collection('conversations')
+        .getFirstListItem(`(user_a="${currentUser.id}" && user_b="${user.id}") || (user_a="${user.id}" && user_b="${currentUser.id}")`);
+      navigation.navigate('ChatThread', { conversationId: conv.id, otherUser: user });
+    } catch {
+      const conv = await pb.collection('conversations').create({ user_a: currentUser.id, user_b: user.id });
+      navigation.navigate('ChatThread', { conversationId: conv.id, otherUser: user });
+    }
+  };
+
+  return (
+    <Screen edges={['bottom', 'left', 'right']}>
+      <FlatList
+        {...autoInset}
+        data={sorted}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}
+        ListEmptyComponent={
+          !loading ? <EmptyState title="Aucun collègue" subtitle="Aucun autre compte pour l'instant." /> : null
+        }
+        renderItem={({ item, index }) => {
+          const preview = previews[item.id];
+          return (
+            <FadeInItem index={index}>
+              <PressableScale style={styles.row} onPress={() => openThread(item)}>
+                <Avatar name={item.name || item.email} color={colors.module.comm} />
+                <View style={styles.rowInfo}>
+                  <Text style={styles.rowName} numberOfLines={1}>
+                    {item.name || item.email}
+                  </Text>
+                  <Text style={styles.rowPreview} numberOfLines={1}>
+                    {preview?.text || 'Démarrer la conversation'}
+                  </Text>
+                </View>
+                {preview?.created ? <Text style={styles.rowTime}>{formatDate(preview.created, 'HH:mm')}</Text> : null}
+              </PressableScale>
+            </FadeInItem>
+          );
+        }}
+      />
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  list: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 24,
+    gap: 8,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    ...continuousCorner,
+    padding: 12,
+    gap: 12,
+    ...shadow.card,
+  },
+  rowInfo: {
+    flex: 1,
+  },
+  rowName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.label,
+  },
+  rowPreview: {
+    fontSize: 13,
+    color: colors.secondaryLabel,
+    marginTop: 2,
+  },
+  rowTime: {
+    fontSize: 12,
+    color: colors.tertiaryLabel,
+  },
+});

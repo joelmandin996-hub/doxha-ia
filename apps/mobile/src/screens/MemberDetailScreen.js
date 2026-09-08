@@ -98,6 +98,17 @@ export default function MemberDetailScreen({ route, navigation }) {
           </GroupedSection>
         ) : null}
 
+        {member.phone ? (
+          <GroupedSection>
+            <Row
+              icon="chatbubble-outline"
+              iconColor={colors.module.comm}
+              label="Envoyer un SMS"
+              onPress={() => navigation.navigate('SmsCompose', { name: member.name, phone: member.phone })}
+            />
+          </GroupedSection>
+        ) : null}
+
         <GroupedSection>
           <Row label="Supprimer le membre" danger onPress={handleDelete} />
         </GroupedSection>

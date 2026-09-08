@@ -4,6 +4,7 @@ import MembersListScreen from '../screens/MembersListScreen';
 import MemberDetailScreen from '../screens/MemberDetailScreen';
 import MemberFormScreen from '../screens/MemberFormScreen';
 import MemberPickerScreen from '../screens/MemberPickerScreen';
+import SmsComposeScreen from '../screens/SmsComposeScreen';
 import { detailScreenOptions, modalFormOptions, stackScreenOptions } from './stackOptions';
 
 const Stack = createNativeStackNavigator();
@@ -15,6 +16,7 @@ export default function MembersNavigator() {
       <Stack.Screen name="MemberDetail" component={MemberDetailScreen} options={{ ...detailScreenOptions, title: 'Membre' }} />
       <Stack.Screen name="MemberForm" component={MemberFormScreen} options={modalFormOptions} />
       <Stack.Screen name="MemberPicker" component={MemberPickerScreen} options={{ ...detailScreenOptions, title: 'Choisir un membre' }} />
+      <Stack.Screen name="SmsCompose" component={SmsComposeScreen} options={modalFormOptions} />
     </Stack.Navigator>
   );
 }

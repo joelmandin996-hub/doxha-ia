@@ -2,8 +2,13 @@ import express from 'express';
 import twilio from 'twilio';
 import pb from '../utils/pocketbaseClient.js';
 import logger from '../utils/logger.js';
+import { pocketbaseAuth } from '../middleware/pocketbase-auth.js';
 
 const router = express.Router();
+
+// SMS uses the church's Twilio budget on every call, so it must not be
+// reachable by anyone who merely finds the URL.
+router.use(pocketbaseAuth({ requireVerified: false }));
 
 // Send SMS to individual phone number
 router.post('/send', async (req, res) => {

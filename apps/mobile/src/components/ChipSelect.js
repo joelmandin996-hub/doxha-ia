@@ -1,6 +1,7 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import PressableScale from './PressableScale';
 import { colors, continuousCorner, radius } from '../theme/colors';
 
 // `inset` renders the row flush inside a GroupedSection card (no outer
@@ -19,19 +20,18 @@ export default function ChipSelect({ label, options, value, onChange, colorFor, 
             const selected = option === value;
             const color = colorFor?.(option) || colors.primary;
             return (
-              <TouchableOpacity
+              <PressableScale
                 key={option}
                 style={[styles.chip, selected ? { backgroundColor: color } : styles.chipIdle]}
                 onPress={() => {
                   Haptics.selectionAsync();
                   onChange(option);
                 }}
-                activeOpacity={0.7}
               >
                 <Text style={[styles.chipText, selected ? styles.chipTextSelected : styles.chipTextIdle]}>
                   {labelFor?.(option) || option}
                 </Text>
-              </TouchableOpacity>
+              </PressableScale>
             );
           })}
         </View>

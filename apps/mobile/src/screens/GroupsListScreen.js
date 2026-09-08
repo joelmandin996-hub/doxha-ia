@@ -6,6 +6,7 @@ import Screen from '../components/Screen';
 import Badge from '../components/Badge';
 import HeaderButton from '../components/HeaderButton';
 import SwipeableRow from '../components/SwipeableRow';
+import FadeInItem from '../components/FadeInItem';
 import EmptyState from '../components/EmptyState';
 import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { GROUP_TYPE_COLORS } from '../lib/constants';
@@ -34,7 +35,7 @@ function GroupRowContent({ item }) {
   );
 }
 
-function GroupRow({ item, onPress, onEdit, onDelete }) {
+function GroupRow({ item, index, onPress, onEdit, onDelete }) {
   const rowRef = useRef(null);
   const { showPeek } = usePeekMenu();
 
@@ -51,11 +52,13 @@ function GroupRow({ item, onPress, onEdit, onDelete }) {
   };
 
   return (
-    <SwipeableRow onDelete={onDelete}>
-      <TouchableOpacity ref={rowRef} activeOpacity={0.7} onPress={onPress} onLongPress={openPeek}>
-        <GroupRowContent item={item} />
-      </TouchableOpacity>
-    </SwipeableRow>
+    <FadeInItem index={index}>
+      <SwipeableRow onDelete={onDelete}>
+        <TouchableOpacity ref={rowRef} activeOpacity={0.7} onPress={onPress} onLongPress={openPeek}>
+          <GroupRowContent item={item} />
+        </TouchableOpacity>
+      </SwipeableRow>
+    </FadeInItem>
   );
 }
 
@@ -107,9 +110,10 @@ export default function GroupsListScreen({ navigation }) {
         ListEmptyComponent={
           !loading ? <EmptyState title="Aucun groupe" subtitle="Créez votre premier groupe." /> : null
         }
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <GroupRow
             item={item}
+            index={index}
             onPress={() => navigation.navigate('GroupDetail', { id: item.id })}
             onEdit={() => navigation.navigate('GroupForm', { id: item.id })}
             onDelete={() => confirmDelete(item)}

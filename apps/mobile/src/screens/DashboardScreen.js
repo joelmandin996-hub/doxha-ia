@@ -1,11 +1,13 @@
 import React, { useCallback, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '../components/Screen';
 import StatCard from '../components/StatCard';
 import Badge from '../components/Badge';
 import EmptyState from '../components/EmptyState';
+import FadeInItem from '../components/FadeInItem';
+import PressableScale from '../components/PressableScale';
 import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { formatDate } from '../lib/format';
 import { SUIVI_STATUS_COLORS } from '../lib/constants';
@@ -78,16 +80,16 @@ export default function DashboardScreen({ navigation }) {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Suivis récents</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Suivis')}>
+          <PressableScale onPress={() => navigation.navigate('Suivis')}>
             <Text style={styles.sectionLink}>Voir tout</Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
 
         {recentSuivis.length === 0 && !loading ? (
           <EmptyState title="Aucun suivi récent" subtitle="Les nouveaux suivis apparaîtront ici." />
         ) : (
-          recentSuivis.map((item) => (
-            <View key={item.id} style={styles.suiviCard}>
+          recentSuivis.map((item, index) => (
+            <FadeInItem key={item.id} index={index} style={styles.suiviCard}>
               <View style={styles.suiviHeader}>
                 <Text style={styles.suiviName} numberOfLines={1}>
                   {item.expand?.membre_id?.name || item.description || 'Sans nom'}
@@ -97,7 +99,7 @@ export default function DashboardScreen({ navigation }) {
               <Text style={styles.suiviMeta} numberOfLines={1}>
                 {item.type || 'Suivi'} · {formatDate(item.created)}
               </Text>
-            </View>
+            </FadeInItem>
           ))
         )}
       </ScrollView>

@@ -5,6 +5,7 @@ import Screen from '../components/Screen';
 import SearchInput from '../components/SearchInput';
 import HeaderButton from '../components/HeaderButton';
 import SwipeableRow from '../components/SwipeableRow';
+import FadeInItem from '../components/FadeInItem';
 import Avatar from '../components/Avatar';
 import Badge from '../components/Badge';
 import EmptyState from '../components/EmptyState';
@@ -34,7 +35,7 @@ function MemberRowContent({ item }) {
   );
 }
 
-function MemberRow({ item, onPress, onEdit, onDelete }) {
+function MemberRow({ item, index, onPress, onEdit, onDelete }) {
   const rowRef = useRef(null);
   const { showPeek } = usePeekMenu();
 
@@ -51,11 +52,13 @@ function MemberRow({ item, onPress, onEdit, onDelete }) {
   };
 
   return (
-    <SwipeableRow onDelete={onDelete}>
-      <TouchableOpacity ref={rowRef} activeOpacity={0.7} onPress={onPress} onLongPress={openPeek}>
-        <MemberRowContent item={item} />
-      </TouchableOpacity>
-    </SwipeableRow>
+    <FadeInItem index={index}>
+      <SwipeableRow onDelete={onDelete}>
+        <TouchableOpacity ref={rowRef} activeOpacity={0.7} onPress={onPress} onLongPress={openPeek}>
+          <MemberRowContent item={item} />
+        </TouchableOpacity>
+      </SwipeableRow>
+    </FadeInItem>
   );
 }
 
@@ -121,9 +124,10 @@ export default function MembersListScreen({ navigation }) {
             />
           ) : null
         }
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <MemberRow
             item={item}
+            index={index}
             onPress={() => navigation.navigate('MemberDetail', { id: item.id })}
             onEdit={() => navigation.navigate('MemberForm', { id: item.id })}
             onDelete={() => confirmDelete(item)}

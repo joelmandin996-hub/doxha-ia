@@ -5,6 +5,7 @@ import Screen from '../components/Screen';
 import Badge from '../components/Badge';
 import HeaderButton from '../components/HeaderButton';
 import SwipeableRow from '../components/SwipeableRow';
+import FadeInItem from '../components/FadeInItem';
 import EmptyState from '../components/EmptyState';
 import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS } from '../lib/constants';
@@ -35,7 +36,7 @@ function EventRowContent({ item }) {
   );
 }
 
-function EventRow({ item, onPress, onEdit, onDelete }) {
+function EventRow({ item, index, onPress, onEdit, onDelete }) {
   const rowRef = useRef(null);
   const { showPeek } = usePeekMenu();
 
@@ -52,11 +53,13 @@ function EventRow({ item, onPress, onEdit, onDelete }) {
   };
 
   return (
-    <SwipeableRow onDelete={onDelete}>
-      <TouchableOpacity ref={rowRef} activeOpacity={0.7} onPress={onPress} onLongPress={openPeek}>
-        <EventRowContent item={item} />
-      </TouchableOpacity>
-    </SwipeableRow>
+    <FadeInItem index={index}>
+      <SwipeableRow onDelete={onDelete}>
+        <TouchableOpacity ref={rowRef} activeOpacity={0.7} onPress={onPress} onLongPress={openPeek}>
+          <EventRowContent item={item} />
+        </TouchableOpacity>
+      </SwipeableRow>
+    </FadeInItem>
   );
 }
 
@@ -107,9 +110,10 @@ export default function EventsListScreen({ navigation }) {
         ListEmptyComponent={
           !loading ? <EmptyState title="Aucun événement" subtitle="Créez votre premier événement." /> : null
         }
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <EventRow
             item={item}
+            index={index}
             onPress={() => navigation.navigate('EventDetail', { id: item.id })}
             onEdit={() => navigation.navigate('EventForm', { id: item.id })}
             onDelete={() => confirmDelete(item)}

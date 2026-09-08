@@ -1,7 +1,8 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import PressableScale from './PressableScale';
 import { colors, radius } from '../theme/colors';
 
 // A single iOS "Settings.app" style row: optional leading icon badge,
@@ -17,7 +18,7 @@ export default function Row({
   danger,
   children,
 }) {
-  const Wrapper = onPress ? TouchableOpacity : View;
+  const Wrapper = onPress ? PressableScale : View;
   const showChevron = chevron ?? (!!onPress && !danger);
   const isStandaloneAction = danger && !icon && value === undefined && !children && !showChevron;
   const displayValue = value || placeholder;
@@ -28,11 +29,7 @@ export default function Row({
       }
     : onPress;
   return (
-    <Wrapper
-      style={[styles.row, isStandaloneAction && styles.rowCentered]}
-      onPress={handlePress}
-      activeOpacity={0.6}
-    >
+    <Wrapper style={[styles.row, isStandaloneAction && styles.rowCentered]} onPress={handlePress}>
       {icon ? (
         <View style={[styles.iconBadge, { backgroundColor: `${iconColor}1f` }]}>
           <Ionicons name={icon} size={16} color={iconColor} />

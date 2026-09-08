@@ -1,12 +1,17 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import AnimatedCounter from './AnimatedCounter';
 import { colors, continuousCorner, radius, shadow } from '../theme/colors';
 
 export default function StatCard({ label, value, color = colors.primary, icon }) {
   return (
     <View style={styles.card}>
       <View style={[styles.iconWrap, { backgroundColor: `${color}1f` }]}>{icon}</View>
-      <Text style={styles.value}>{value}</Text>
+      {typeof value === 'number' ? (
+        <AnimatedCounter value={value} style={styles.value} />
+      ) : (
+        <Text style={styles.value}>{value}</Text>
+      )}
       <Text style={styles.label}>{label}</Text>
     </View>
   );
